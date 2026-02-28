@@ -3,12 +3,32 @@ import { z } from "zod";
 import { requireAuthApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { logActivity } from "@/lib/activity/logActivity";
-import { fail } from "@/lib/http/responses";
+import { fail, ok } from "@/lib/http/responses";
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(200),
   status: z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]).default("ACTIVE"),
 });
+
+export async function GET(req: Request) {
+  const auth = await requireAuthApi(req);
+  if ("errorResponse" in auth) return auth.errorResponse;
+
+  const clients = await db.client.findMany({
+    where: { workspaceId: auth.session.workspaceId },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      pinnedNotes: true,
+      updatedAt: true,
+      createdAt: true,
+    },
+  });
+
+  return ok(auth.requestId, { clients });
+}
 
 export async function POST(req: Request) {
   const auth = await requireAuthApi(req);
