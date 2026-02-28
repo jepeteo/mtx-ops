@@ -91,6 +91,33 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
   return ok(auth.requestId, { client: updated });
 }
 
+export async function DELETE(req: Request, { params }: { params: RouteParams }) {
+  const auth = await requireAuthApi(req);
+  if ("errorResponse" in auth) return auth.errorResponse;
+
+  const existing = await db.client.findFirst({
+    where: { id: params.clientId, workspaceId: auth.session.workspaceId },
+    select: { id: true, name: true },
+  });
+
+  if (!existing) {
+    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: params.clientId }, 404);
+  }
+
+  await db.client.delete({ where: { id: existing.id } });
+
+  await logActivity({
+    workspaceId: auth.session.workspaceId,
+    actorId: auth.session.userId,
+    action: "client.delete",
+    entityType: "Client",
+    entityId: existing.id,
+    metadata: { name: existing.name },
+  });
+
+  return ok(auth.requestId, { deleted: true, clientId: existing.id });
+}
+
 export async function POST(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
