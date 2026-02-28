@@ -8,6 +8,7 @@ out
 # env
 .env
 .env.*.local
+.env.local
 
 # logs
 npm-debug.log*
