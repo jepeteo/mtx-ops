@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession, getSessionFromApiRequest } from "./session";
 import type { Role } from "./types";
 import { fail, getRequestId } from "@/lib/http/responses";
+import { db } from "@/lib/db/db";
 
 const ROLE_ORDER: Record<Role, number> = {
   MEMBER: 1,
@@ -16,7 +17,29 @@ export function hasMinRole(currentRole: Role, minRole: Role) {
 export async function requireAuth() {
   const session = await getSession();
   if (!session) redirect("/login");
-  return session;
+
+  const user = await db.user.findFirst({
+    where: {
+      id: session.userId,
+      workspaceId: session.workspaceId,
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      workspaceId: true,
+    },
+  });
+
+  if (!user) redirect("/login");
+
+  return {
+    userId: user.id,
+    userEmail: user.email,
+    role: user.role,
+    workspaceId: user.workspaceId,
+  };
 }
 
 export async function requireRole(minRole: Role) {
@@ -32,7 +55,33 @@ export async function requireAuthApi(req: Request) {
     return { errorResponse: fail(requestId, "UNAUTHORIZED", "Authentication required", undefined, 401) };
   }
 
-  return { session, requestId };
+  const user = await db.user.findFirst({
+    where: {
+      id: session.userId,
+      workspaceId: session.workspaceId,
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      workspaceId: true,
+    },
+  });
+
+  if (!user) {
+    return { errorResponse: fail(requestId, "UNAUTHORIZED", "Session is no longer active", undefined, 401) };
+  }
+
+  return {
+    requestId,
+    session: {
+      userId: user.id,
+      userEmail: user.email,
+      role: user.role,
+      workspaceId: user.workspaceId,
+    },
+  };
 }
 
 export async function requireRoleApi(req: Request, minRole: Role) {

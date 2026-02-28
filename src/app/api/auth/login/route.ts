@@ -31,6 +31,11 @@ export async function POST(req: Request) {
     return fail(requestId, "UNAUTHORIZED", "Invalid credentials", undefined, 401);
   }
 
+  if (user.status !== "ACTIVE") {
+    recordFailedLogin(rateLimitKey);
+    return fail(requestId, "FORBIDDEN", "User account is disabled", undefined, 403);
+  }
+
   const passwordMatches = await verifyPassword(parsed.data.password, user.passwordHash);
   if (!passwordMatches) {
     recordFailedLogin(rateLimitKey);
