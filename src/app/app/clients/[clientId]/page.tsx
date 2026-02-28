@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
 import { DeleteServiceButton } from "@/components/clients/DeleteServiceButton";
+import { UpdateServiceStatusButton } from "@/components/clients/UpdateServiceStatusButton";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -64,6 +65,11 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
                 </td>
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{s.status}</td>
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+                  {s.status === "ACTIVE" ? (
+                    <UpdateServiceStatusButton serviceId={s.id} nextStatus="CANCELED" />
+                  ) : (
+                    <UpdateServiceStatusButton serviceId={s.id} nextStatus="ACTIVE" />
+                  )}
                   <DeleteServiceButton serviceId={s.id} />
                 </td>
               </tr>
