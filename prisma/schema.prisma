@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ClientStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum ServiceStatus {
+  ACTIVE
+  CANCELED
+  UNKNOWN
+}
+
+enum ServiceType {
+  DOMAIN
+  HOSTING
+  EMAIL
+  CDN
+  LICENSE
+  MONITORING
+  PAYMENT
+  CMS
+  OTHER
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  clients     Client[]
+  activityLog ActivityLog[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  email        String   @unique
+  name         String?
+  role         Role     @default(MEMBER)
+  passwordHash String?
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id          String       @id @default(uuid())
+  workspaceId String
+  name        String
+  status      ClientStatus @default(ACTIVE)
+  pinnedNotes String?
+  tags        String[]     @default([])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  services      Service[]
+  assetLinks    AssetLink[]
+  vaultPointers VaultPointer[]
+}
+
+model Service {
+  id         String        @id @default(uuid())
+  clientId   String
+  provider   String
+  type       ServiceType
+  name       String
+  status     ServiceStatus @default(ACTIVE)
+  renewalDate DateTime?
+  cycle      String?       // e.g. yearly, monthly
+  costCents  Int?
+  currency   String?       // EUR, GBP
+  autoRenew  Boolean       @default(false)
+  payer      String?       // client / us / shared
+  reminderRules Json       @default("[]") // e.g. [60,30,14,7]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model AssetLink {
+  id        String   @id @default(uuid())
+  clientId  String
+  kind      String   // e.g. "hosting_panel", "repo", "wp_admin"
+  label     String
+  url       String
+  environment String? // prod/stage
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model VaultPointer {
+  id          String   @id @default(uuid())
+  clientId    String
+  label       String
+  vaultItemId String
+  fieldName   String
+  usernameHint String?
+  ownerUserId String?
+  lastVerifiedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  workspaceId String
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json
+  createdAt  DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+}
