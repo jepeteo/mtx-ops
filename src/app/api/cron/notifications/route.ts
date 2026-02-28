@@ -3,6 +3,7 @@ import { env } from "@/lib/env";
 import { fail, getRequestId, logServerError, ok } from "@/lib/http/responses";
 
 const DEFAULT_RULES = [60, 30, 14, 7];
+const INACTIVITY_DAYS = 30;
 
 function toUtcDayStart(value: Date) {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
@@ -98,6 +99,53 @@ export async function GET(req: Request) {
           serviceName: service.name,
           provider: service.provider,
           remainingDays,
+        },
+      });
+    }
+
+    const clients = await db.client.findMany({
+      where: { status: "ACTIVE" },
+      select: {
+        id: true,
+        workspaceId: true,
+        name: true,
+        updatedAt: true,
+      },
+    });
+
+    for (const client of clients) {
+      const lastClientActivity = await db.activityLog.findFirst({
+        where: {
+          workspaceId: client.workspaceId,
+          entityType: "Client",
+          entityId: client.id,
+        },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      });
+
+      const lastActivityAt = lastClientActivity?.createdAt ?? client.updatedAt;
+      const inactiveDays = daysUntil(lastActivityAt, now);
+
+      if (inactiveDays < INACTIVITY_DAYS) continue;
+
+      const dedupeDay = toUtcDayStart(now).toISOString().slice(0, 10);
+      const dedupeKey = `inactivity:${client.id}:${dedupeDay}`;
+
+      newNotifications.push({
+        workspaceId: client.workspaceId,
+        type: "INACTIVITY",
+        status: "OPEN",
+        entityType: "Client",
+        entityId: client.id,
+        title: `Client inactive for ${inactiveDays} days`,
+        message: `${client.name} has no recorded client activity in the last ${inactiveDays} days.`,
+        dueAt: now,
+        dedupeKey,
+        metadata: {
+          clientId: client.id,
+          clientName: client.name,
+          inactiveDays,
         },
       });
     }

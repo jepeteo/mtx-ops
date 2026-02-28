@@ -24,9 +24,9 @@
 
 ### Current status (2026-02-28)
 - Services CRUD baseline is now available (list/create/delete via UI, plus `GET/POST` and `PATCH/DELETE` APIs).
-- Renewal cron now generates deduped renewal notifications; Notification Center lists notifications with snooze/mark-handled actions.
+- Renewal and inactivity cron generators now produce deduped notifications; Notification Center lists notifications with snooze/mark-handled actions.
 - All service and notification mutations write ActivityLog and enforce workspace scoping.
-- Pending in Phase 2: due-date/inactivity generators, dashboard renewal buckets, and notification tabs/filtering polish.
+- Pending in Phase 2: due-date generator, notification tabs/filtering polish, and additional renewal rule UX improvements.
 
 ## Phase 3 — Projects & Tasks
 - Projects CRUD (+ project keyPrefix)
