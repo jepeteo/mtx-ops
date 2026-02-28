@@ -37,6 +37,19 @@ enum ServiceType {
   OTHER
 }
 
+enum NotificationType {
+  RENEWAL
+  TASK
+  INACTIVITY
+  HANDOVER
+}
+
+enum NotificationStatus {
+  OPEN
+  SNOOZED
+  HANDLED
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -45,6 +58,7 @@ model Workspace {
 
   users       User[]
   clients     Client[]
+  notifications Notification[]
   activityLog ActivityLog[]
 }
 
@@ -140,4 +154,29 @@ model ActivityLog {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, createdAt])
+}
+
+model Notification {
+  id          String             @id @default(uuid())
+  workspaceId String
+  type        NotificationType
+  status      NotificationStatus @default(OPEN)
+  entityType  String
+  entityId    String
+  title       String
+  message     String
+  dueAt       DateTime
+  snoozedUntil DateTime?
+  handledAt   DateTime?
+  handledById String?
+  dedupeKey   String
+  metadata    Json               @default("{}")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, dueAt])
+  @@index([workspaceId, type, dueAt])
+  @@unique([workspaceId, dedupeKey])
 }

@@ -15,6 +15,7 @@ const EnvSchema = z.object({
   STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   STORAGE_BUCKET: z.string().optional(),
   STORAGE_PUBLIC_BASE_URL: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
   VAULTWARDEN_URL: z.string().optional(),
 });
 
@@ -33,5 +34,6 @@ export const env = EnvSchema.parse({
   STORAGE_SECRET_ACCESS_KEY: process.env.STORAGE_SECRET_ACCESS_KEY,
   STORAGE_BUCKET: process.env.STORAGE_BUCKET,
   STORAGE_PUBLIC_BASE_URL: process.env.STORAGE_PUBLIC_BASE_URL,
+  CRON_SECRET: process.env.CRON_SECRET,
   VAULTWARDEN_URL: process.env.VAULTWARDEN_URL,
 });

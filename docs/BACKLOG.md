@@ -31,7 +31,7 @@ Status note (2026-02-28): client CRUD baseline is implemented (list/create/view/
 ### B3 — Assets & Links
 
 ## Epic C — Services & Renewals
-Status note (2026-02-28): services CRUD baseline has started with workspace-scoped APIs and client-card create/delete UX.
+Status note (2026-02-28): services CRUD baseline is implemented; renewal cron + Notification Center baseline are now wired with snooze/mark-handled actions.
 
 ### C1 — Service CRUD
 ### C2 — Renewal reminders
