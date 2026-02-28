@@ -50,6 +50,7 @@ function UserActionsRow({
   const [nextRole, setNextRole] = useState<Role>(user.role);
   const [savingRole, setSavingRole] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const userRole = user.role as Role;
@@ -87,6 +88,29 @@ function UserActionsRow({
     setSavingStatus(false);
   }
 
+  async function onResetPassword() {
+    const nextPassword = window.prompt("Enter temporary password (min 8 chars)");
+    if (!nextPassword) return;
+
+    setSavingPassword(true);
+
+    const response = await fetch(`/api/admin/users/${user.id}/password`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: nextPassword }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as ErrorEnvelope | null;
+      setError(body && !body.ok ? body.error.message : "Password reset failed");
+      setSavingPassword(false);
+      return;
+    }
+
+    setSavingPassword(false);
+    setError(null);
+  }
+
   return (
     <tr className="border-t border-border">
       <td className="py-2">{user.email}</td>
@@ -120,6 +144,10 @@ function UserActionsRow({
             disabled={!canManage || savingStatus || (canDisableSelf && userStatus === "ACTIVE")}
           >
             {savingStatus ? "Updating..." : userStatus === "ACTIVE" ? "Disable" : "Activate"}
+          </Button>
+
+          <Button size="sm" variant="ghost" onClick={onResetPassword} disabled={!canManage || savingPassword}>
+            {savingPassword ? "Resetting..." : "Reset password"}
           </Button>
         </div>
         {error ? <div className="mt-1 text-xs text-destructive">{error}</div> : null}

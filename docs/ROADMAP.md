@@ -7,8 +7,8 @@
 - Basic AppShell + dashboard skeleton
 
 ### Current status (2026-02-28)
-- Completed in foundation slice: env/db setup scripts, seed workspace + owner, login/logout/session cookie auth, `/app` protection, role guards, shared error envelope, auth activity logging, minimal protected dashboard.
-- Pending in Phase 0: manual user creation UI/API and broader role-enforced admin workflows.
+- Completed in foundation slice: env/db setup scripts, seed workspace + owner, login/logout/session cookie auth, `/app` protection, role guards, shared error envelope, auth activity logging, minimal protected dashboard, and admin user lifecycle controls (create/list/role/status/password reset).
+- Pending in Phase 0: broader role-enforced admin workflows beyond user management.
 
 ## Phase 1 — Clients & Intelligence
 - Clients CRUD

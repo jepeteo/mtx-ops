@@ -3,7 +3,7 @@
 This backlog is written as **epics → user stories → acceptance criteria**.
 
 ## Epic A — Foundations
-Status note (2026-02-28): baseline auth/session/RBAC guards/audit helper are implemented; manual user create/list and role/status updates are now available for admin users.
+Status note (2026-02-28): baseline auth/session/RBAC guards/audit helper are implemented; manual user create/list and role/status/password reset controls are available for admin users.
 
 ### A1 — Login/Logout
 - As a user, I can log in with email+password.
