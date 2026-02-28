@@ -15,7 +15,7 @@ const nav = [
   { href: "/app/projects", label: "Projects", icon: Layers },
   { href: "/app/tasks", label: "Tasks", icon: KanbanSquare },
   { href: "/app/notifications", label: "Notifications", icon: Bell },
-  { href: "/app/admin", label: "Admin", icon: Settings },
+  { href: "/app/admin/users", label: "Admin", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
