@@ -2,12 +2,29 @@ import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NotificationActions } from "@/components/notifications/NotificationActions";
+import Link from "next/link";
 
-export default async function NotificationsPage() {
+type Search = {
+  type?: string;
+  status?: string;
+};
+
+export default async function NotificationsPage({ searchParams }: { searchParams?: Promise<Search> }) {
   const session = await requireSession();
+  const resolvedSearch = (await searchParams) ?? {};
+
+  const allowedTypes = new Set(["RENEWAL", "TASK", "INACTIVITY", "HANDOVER"]);
+  const allowedStatus = new Set(["OPEN", "SNOOZED", "HANDLED"]);
+
+  const selectedType = resolvedSearch.type && allowedTypes.has(resolvedSearch.type) ? resolvedSearch.type : undefined;
+  const selectedStatus = resolvedSearch.status && allowedStatus.has(resolvedSearch.status) ? resolvedSearch.status : undefined;
 
   const notifications = await db.notification.findMany({
-    where: { workspaceId: session.workspaceId },
+    where: {
+      workspaceId: session.workspaceId,
+      ...(selectedType ? { type: selectedType as "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER" } : {}),
+      ...(selectedStatus ? { status: selectedStatus as "OPEN" | "SNOOZED" | "HANDLED" } : {}),
+    },
     orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
     take: 200,
   });
@@ -26,6 +43,24 @@ export default async function NotificationsPage() {
           <CardDescription>Renewals, due dates, inactivity, and handovers in one place.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-3 flex flex-wrap gap-2 text-xs">
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications">
+              All
+            </Link>
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=RENEWAL">
+              Renewals
+            </Link>
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=INACTIVITY">
+              Inactivity
+            </Link>
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?status=OPEN">
+              Open
+            </Link>
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?status=HANDLED">
+              Handled
+            </Link>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
