@@ -15,6 +15,11 @@
 - Client Card (Overview + Assets/Links)
 - Providers catalog
 
+### Current status (2026-02-28)
+- Baseline client CRUD is available (list/create/view/edit/delete) with workspace scoping and audit logging on create/update/delete.
+- API baseline aligned for clients: `GET /api/clients`, `POST /api/clients`, `GET/PATCH/DELETE /api/clients/:id` with standard envelopes for JSON callers.
+- Pending in Phase 1: provider catalog and richer Client Card intelligence sections.
+
 ## Phase 2 — Services & Renewals
 - Services CRUD
 - Renewal rules + reminder schedule

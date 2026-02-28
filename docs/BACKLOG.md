@@ -24,6 +24,8 @@ Status note (2026-02-28): baseline auth/session/RBAC guards/audit helper are imp
 - Every create/update/delete writes ActivityLog.
 
 ## Epic B — Clients & Intelligence
+Status note (2026-02-28): client CRUD baseline is implemented (list/create/view/edit/delete) with workspace-scoped APIs and mutation audit logs.
+
 ### B1 — Client CRUD
 ### B2 — Client Card overview
 ### B3 — Assets & Links
