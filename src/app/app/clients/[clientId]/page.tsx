@@ -2,6 +2,8 @@ import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
+import { DeleteServiceButton } from "@/components/clients/DeleteServiceButton";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -38,6 +40,7 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
       </section>
 
       <h3>Services & renewals</h3>
+      <CreateServiceForm clientId={client.id} />
       <div style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -47,6 +50,7 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Type</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Renewal</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
+              <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -59,11 +63,14 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
                   {s.renewalDate ? new Date(s.renewalDate).toLocaleDateString() : "—"}
                 </td>
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{s.status}</td>
+                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+                  <DeleteServiceButton serviceId={s.id} />
+                </td>
               </tr>
             ))}
             {client.services.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 14, color: "#666" }}>
+                <td colSpan={6} style={{ padding: 14, color: "#666" }}>
                   No services yet.
                 </td>
               </tr>

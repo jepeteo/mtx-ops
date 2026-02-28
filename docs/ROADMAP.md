@@ -21,10 +21,11 @@
 - Pending in Phase 1: provider catalog and richer Client Card intelligence sections.
 
 ## Phase 2 — Services & Renewals
-- Services CRUD
-- Renewal rules + reminder schedule
-- Notification generator (cron)
-- Dashboard widgets + Notification Center UI
+
+### Current status (2026-02-28)
+- Services CRUD baseline is now available (list/create/delete via UI, plus `GET/POST` and `PATCH/DELETE` APIs).
+- All service mutations write ActivityLog and enforce workspace scoping.
+- Pending in Phase 2: renewal rules UX polish, dashboard buckets, and notification generation/deduping.
 
 ## Phase 3 — Projects & Tasks
 - Projects CRUD (+ project keyPrefix)
