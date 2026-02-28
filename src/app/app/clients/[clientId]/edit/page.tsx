@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { notFound } from "next/navigation";
+import { DeleteClientButton } from "@/components/clients/DeleteClientButton";
 
 export default async function EditClientPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -33,6 +34,8 @@ export default async function EditClientPage({ params }: { params: { clientId: s
 
         <button type="submit">Save</button>
       </form>
+
+      <DeleteClientButton clientId={client.id} />
     </div>
   );
 }
