@@ -1,5 +1,7 @@
 # Build plan (phased)
 
+Status note (2026-02-28): Phase 0 baseline is delivered (auth/session, RBAC guards, audit log helper, seeded workspace owner, and admin user lifecycle controls).
+
 ## Phase 0 — Foundations
 - Workspace model (single workspace now)
 - Users (manual creation)

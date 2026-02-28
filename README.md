@@ -22,13 +22,13 @@ npm i
 
 2) Copy env
 ```bash
-cp .env.example .env
-# fill DATABASE_URL + AUTH_JWT_SECRET at minimum
+cp .env.example .env.local
+# fill DATABASE_URL + AUTH_JWT_SECRET + SEED_OWNER_EMAIL + SEED_OWNER_PASSWORD
 ```
 
 3) Init DB
 ```bash
-npm run prisma:migrate
+npm run db:migrate
 npm run db:seed
 ```
 
@@ -39,9 +39,10 @@ npm run dev
 
 Open: http://localhost:3000
 
-### Default seeded users
-- owner@example.com / ChangeMe123!
-- admin@example.com / ChangeMe123!
+### Seeded owner user
+- Created from `.env.local` values:
+	- `SEED_OWNER_EMAIL`
+	- `SEED_OWNER_PASSWORD`
 
 ## Project structure
 - `src/app` - routes, layouts, pages, API routes
