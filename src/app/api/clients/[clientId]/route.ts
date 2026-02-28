@@ -122,6 +122,26 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const contentType = req.headers.get("content-type") || "";
+  const expectsJson = contentType.includes("application/json") || (req.headers.get("accept") || "").includes("application/json");
+
+  if (contentType.includes("application/json")) {
+    const body = await req.json().catch(() => null);
+    const parsed = UpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return fail(auth.requestId, "VALIDATION_ERROR", "Invalid client payload", parsed.error.flatten(), 400);
+    }
+
+    const updated = await updateClient({
+      auth,
+      clientId: params.clientId,
+      payload: parsed.data,
+    });
+
+    if (updated instanceof Response) return updated;
+    return ok(auth.requestId, { client: updated });
+  }
+
   const form = await req.formData();
   const method = String(form.get("_method") || "").toLowerCase();
   if (method !== "put") {
@@ -146,6 +166,10 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
   });
 
   if (updated instanceof Response) return updated;
+
+  if (expectsJson) {
+    return ok(auth.requestId, { client: updated });
+  }
 
   return NextResponse.redirect(new URL(`/app/clients/${updated.id}`, process.env.APP_URL || "http://localhost:3000"));
 }

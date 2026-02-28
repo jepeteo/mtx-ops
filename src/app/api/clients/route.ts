@@ -36,6 +36,7 @@ export async function POST(req: Request) {
 
   // Support HTML form POST (application/x-www-form-urlencoded)
   const contentType = req.headers.get("content-type") || "";
+  const expectsJson = contentType.includes("application/json") || (req.headers.get("accept") || "").includes("application/json");
   let raw: unknown = null;
   if (contentType.includes("application/json")) raw = await req.json().catch(() => null);
   else {
@@ -64,6 +65,10 @@ export async function POST(req: Request) {
     entityId: client.id,
     metadata: { name: client.name },
   });
+
+  if (expectsJson) {
+    return ok(auth.requestId, { client }, { status: 201 });
+  }
 
   return NextResponse.redirect(new URL(`/app/clients/${client.id}`, process.env.APP_URL || "http://localhost:3000"));
 }
