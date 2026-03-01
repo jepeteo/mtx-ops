@@ -3,6 +3,9 @@ import { db } from "@/lib/db/db";
 import { requireAuthApi } from "@/lib/auth/guards";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
+import { normalizeReminderRules } from "@/lib/services/reminderRules";
+
+const ReminderRulesSchema = z.array(z.number().int().min(0).max(365)).min(1).max(12);
 
 const ServiceUpdateSchema = z
   .object({
@@ -16,7 +19,7 @@ const ServiceUpdateSchema = z
     currency: z.string().min(3).max(3).optional().nullable(),
     autoRenew: z.boolean().optional(),
     payer: z.string().max(80).optional().nullable(),
-    reminderRules: z.array(z.number().int().nonnegative()).optional(),
+    reminderRules: ReminderRulesSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field must be provided",
@@ -88,7 +91,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ servic
   if (parsed.data.currency !== undefined) updateData.currency = parsed.data.currency ?? null;
   if (parsed.data.autoRenew !== undefined) updateData.autoRenew = parsed.data.autoRenew;
   if (parsed.data.payer !== undefined) updateData.payer = parsed.data.payer ?? null;
-  if (parsed.data.reminderRules !== undefined) updateData.reminderRules = parsed.data.reminderRules;
+  if (parsed.data.reminderRules !== undefined) updateData.reminderRules = normalizeReminderRules(parsed.data.reminderRules);
 
   const service = await db.service.update({
     where: { id: existing.id },
@@ -105,6 +108,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ servic
       clientId: existing.clientId,
       name: service.name,
       status: service.status,
+      reminderRules: service.reminderRules,
     },
   });
 

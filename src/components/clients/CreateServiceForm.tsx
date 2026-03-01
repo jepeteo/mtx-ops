@@ -9,13 +9,31 @@ export function CreateServiceForm({ clientId }: { clientId: string }) {
   const [provider, setProvider] = useState("");
   const [type, setType] = useState<ServiceType>("OTHER");
   const [renewalDate, setRenewalDate] = useState("");
+  const [reminderRules, setReminderRules] = useState("60,30,14,7");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function parseRules(raw: string) {
+    const values = raw
+      .split(",")
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isInteger(item) && item >= 0 && item <= 365);
+
+    const deduped = Array.from(new Set(values)).sort((left, right) => right - left);
+    return deduped;
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError(null);
+
+    const parsedReminderRules = parseRules(reminderRules);
+    if (parsedReminderRules.length === 0) {
+      setSaving(false);
+      setError("Reminder days must be comma-separated integers between 0 and 365");
+      return;
+    }
 
     const response = await fetch(`/api/clients/${clientId}/services`, {
       method: "POST",
@@ -26,7 +44,7 @@ export function CreateServiceForm({ clientId }: { clientId: string }) {
         type,
         status: "ACTIVE",
         renewalDate: renewalDate ? new Date(`${renewalDate}T00:00:00.000Z`).toISOString() : null,
-        reminderRules: [60, 30, 14, 7],
+        reminderRules: parsedReminderRules,
       }),
     });
 
@@ -75,6 +93,13 @@ export function CreateServiceForm({ clientId }: { clientId: string }) {
       </select>
 
       <input type="date" value={renewalDate} onChange={(event) => setRenewalDate(event.target.value)} style={{ padding: 8 }} />
+
+      <input
+        placeholder="Reminder days (e.g. 60,30,14,7)"
+        value={reminderRules}
+        onChange={(event) => setReminderRules(event.target.value)}
+        style={{ padding: 8 }}
+      />
 
       <button type="submit" disabled={saving} style={{ width: 160 }}>
         {saving ? "Saving..." : "Create service"}

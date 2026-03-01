@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
 import { DeleteServiceButton } from "@/components/clients/DeleteServiceButton";
 import { UpdateServiceStatusButton } from "@/components/clients/UpdateServiceStatusButton";
+import { UpdateServiceReminderRules } from "@/components/clients/UpdateServiceReminderRules";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -50,6 +51,7 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Provider</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Type</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Renewal</th>
+              <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Reminders</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
               <th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Actions</th>
             </tr>
@@ -63,8 +65,26 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
                   {s.renewalDate ? new Date(s.renewalDate).toLocaleDateString() : "—"}
                 </td>
+                <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+                  {Array.isArray(s.reminderRules)
+                    ? s.reminderRules
+                        .map((rule) => Number(rule))
+                        .filter((rule) => Number.isInteger(rule) && rule >= 0)
+                        .join(", ") || "—"
+                    : "—"}
+                </td>
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{s.status}</td>
                 <td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+                  <UpdateServiceReminderRules
+                    serviceId={s.id}
+                    initialRules={
+                      Array.isArray(s.reminderRules)
+                        ? s.reminderRules
+                            .map((rule) => Number(rule))
+                            .filter((rule) => Number.isInteger(rule) && rule >= 0 && rule <= 365)
+                        : [60, 30, 14, 7]
+                    }
+                  />
                   {s.status === "ACTIVE" ? (
                     <UpdateServiceStatusButton serviceId={s.id} nextStatus="CANCELED" />
                   ) : (
@@ -76,7 +96,7 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
             ))}
             {client.services.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ padding: 14, color: "#666" }}>
+                <td colSpan={7} style={{ padding: 14, color: "#666" }}>
                   No services yet.
                 </td>
               </tr>

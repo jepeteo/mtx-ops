@@ -3,6 +3,9 @@ import { db } from "@/lib/db/db";
 import { requireAuthApi } from "@/lib/auth/guards";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
+import { DEFAULT_SERVICE_REMINDER_RULES, normalizeReminderRules } from "@/lib/services/reminderRules";
+
+const ReminderRulesSchema = z.array(z.number().int().min(0).max(365)).min(1).max(12);
 
 const ServiceCreateSchema = z.object({
   provider: z.string().min(1).max(120),
@@ -15,7 +18,7 @@ const ServiceCreateSchema = z.object({
   currency: z.string().min(3).max(3).optional().nullable(),
   autoRenew: z.boolean().default(false),
   payer: z.string().max(80).optional().nullable(),
-  reminderRules: z.array(z.number().int().nonnegative()).default([60, 30, 14, 7]),
+  reminderRules: ReminderRulesSchema.default([...DEFAULT_SERVICE_REMINDER_RULES]),
 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ clientId: string }> }) {
@@ -81,7 +84,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ clientI
       currency: parsed.data.currency ?? null,
       autoRenew: parsed.data.autoRenew,
       payer: parsed.data.payer ?? null,
-      reminderRules: parsed.data.reminderRules,
+      reminderRules: normalizeReminderRules(parsed.data.reminderRules),
     },
   });
 
@@ -96,6 +99,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ clientI
       provider: service.provider,
       type: service.type,
       name: service.name,
+      reminderRules: service.reminderRules,
     },
   });
 

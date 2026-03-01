@@ -22,12 +22,13 @@
 
 ## Phase 2 — Services & Renewals
 
-### Current status (2026-02-28)
+### Current status (2026-03-01)
 - Services CRUD baseline is now available (list/create/delete via UI, plus `GET/POST` and `PATCH/DELETE` APIs).
 - Renewal, due-date (tasks), and inactivity cron generators now produce deduped notifications; Notification Center lists notifications with snooze/mark-handled actions.
 - All service and notification mutations write ActivityLog and enforce workspace scoping.
 - Baseline task capture/list is now available via `/app/tasks` and `/api/tasks` so due-date notifications are sourced from real workspace tasks.
-- Pending in Phase 2: notification tabs/filtering polish and additional renewal rule UX improvements.
+- Notification tabs/filtering and renewal reminder rule editing are now available in the app UI.
+- Pending in Phase 2: no major gaps; continue iteration via bug fixes and UX cleanup as needed.
 
 ## Phase 3 — Projects & Tasks
 - Projects CRUD (+ project keyPrefix)
