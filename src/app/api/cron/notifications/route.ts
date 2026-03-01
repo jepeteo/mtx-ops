@@ -1,26 +1,14 @@
 import { db } from "@/lib/db/db";
 import { env } from "@/lib/env";
 import { fail, getRequestId, logServerError, ok } from "@/lib/http/responses";
+import {
+  buildInactivityDedupeKey,
+  buildRenewalDedupeKey,
+  daysUntil,
+  parseReminderRules,
+} from "@/lib/notifications/renewals";
 
-const DEFAULT_RULES = [60, 30, 14, 7];
 const INACTIVITY_DAYS = 30;
-
-function toUtcDayStart(value: Date) {
-  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
-}
-
-function daysUntil(fromDate: Date, toDate: Date) {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.floor((toUtcDayStart(toDate).getTime() - toUtcDayStart(fromDate).getTime()) / msPerDay);
-}
-
-function parseReminderRules(value: unknown): number[] {
-  if (!Array.isArray(value)) return DEFAULT_RULES;
-  const parsed = value
-    .map((item) => Number(item))
-    .filter((item) => Number.isInteger(item) && item >= 0);
-  return parsed.length > 0 ? parsed : DEFAULT_RULES;
-}
 
 /**
  * Called by Vercel cron every 6 hours (see vercel.json).
@@ -84,8 +72,7 @@ export async function GET(req: Request) {
 
       if (!rules.includes(remainingDays)) continue;
 
-      const dueAtDay = toUtcDayStart(service.renewalDate).toISOString().slice(0, 10);
-      const dedupeKey = `renewal:${service.id}:${remainingDays}:${dueAtDay}`;
+      const dedupeKey = buildRenewalDedupeKey(service.id, remainingDays, service.renewalDate);
 
       newNotifications.push({
         workspaceId: service.client.workspaceId,
@@ -146,8 +133,7 @@ export async function GET(req: Request) {
 
       if (inactiveDays < INACTIVITY_DAYS) continue;
 
-      const dedupeDay = toUtcDayStart(now).toISOString().slice(0, 10);
-      const dedupeKey = `inactivity:${client.id}:${dedupeDay}`;
+      const dedupeKey = buildInactivityDedupeKey(client.id, now);
 
       newNotifications.push({
         workspaceId: client.workspaceId,
