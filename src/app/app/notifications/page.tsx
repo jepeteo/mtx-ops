@@ -53,6 +53,9 @@ export default async function NotificationsPage({ searchParams }: { searchParams
             <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=INACTIVITY">
               Inactivity
             </Link>
+            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=TASK">
+              Task due
+            </Link>
             <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?status=OPEN">
               Open
             </Link>

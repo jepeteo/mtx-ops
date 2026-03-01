@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  TASK_DUE_REMINDER_DAYS,
   buildInactivityDedupeKey,
   buildRenewalDedupeKey,
+  buildTaskDueDedupeKey,
   daysUntil,
   parseReminderRules,
   toUtcDayStart,
@@ -34,5 +36,11 @@ describe("notification renewal helpers", () => {
     expect(buildInactivityDedupeKey("client_1", new Date("2026-04-15T22:00:00.000Z"))).toBe(
       "inactivity:client_1:2026-04-15",
     );
+    expect(buildTaskDueDedupeKey("task_1", 3, renewalDate)).toBe("task:task_1:due-3:2026-04-15");
+    expect(buildTaskDueDedupeKey("task_1", -1, renewalDate)).toBe("task:task_1:overdue:2026-04-15");
+  });
+
+  it("uses expected default task reminder day buckets", () => {
+    expect(TASK_DUE_REMINDER_DAYS).toEqual([7, 3, 1, 0]);
   });
 });

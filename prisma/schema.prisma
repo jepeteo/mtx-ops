@@ -25,6 +25,13 @@ enum ServiceStatus {
   UNKNOWN
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
 enum ServiceType {
   DOMAIN
   HOSTING
@@ -58,6 +65,7 @@ model Workspace {
 
   users       User[]
   clients     Client[]
+  tasks       Task[]
   notifications Notification[]
   activityLog ActivityLog[]
 }
@@ -88,8 +96,26 @@ model Client {
 
   workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   services      Service[]
+  tasks         Task[]
   assetLinks    AssetLink[]
   vaultPointers VaultPointer[]
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  workspaceId String
+  clientId    String?
+  title       String
+  status      TaskStatus @default(TODO)
+  dueAt       DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  client    Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, status, dueAt])
+  @@index([clientId, dueAt])
 }
 
 model Service {

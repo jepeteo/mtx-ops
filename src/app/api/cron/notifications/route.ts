@@ -4,8 +4,10 @@ import { fail, getRequestId, logServerError, ok } from "@/lib/http/responses";
 import {
   buildInactivityDedupeKey,
   buildRenewalDedupeKey,
+  buildTaskDueDedupeKey,
   daysUntil,
   parseReminderRules,
+  TASK_DUE_REMINDER_DAYS,
 } from "@/lib/notifications/renewals";
 
 const INACTIVITY_DAYS = 30;
@@ -53,7 +55,7 @@ export async function GET(req: Request) {
     const now = new Date();
     const newNotifications: Array<{
       workspaceId: string;
-      type: "RENEWAL" | "INACTIVITY";
+      type: "RENEWAL" | "INACTIVITY" | "TASK";
       status: "OPEN";
       entityType: string;
       entityId: string;
@@ -90,6 +92,70 @@ export async function GET(req: Request) {
           serviceName: service.name,
           provider: service.provider,
           remainingDays,
+        },
+      });
+    }
+
+    const tasks = await db.task.findMany({
+      where: {
+        status: {
+          in: ["TODO", "IN_PROGRESS", "BLOCKED"],
+        },
+        dueAt: { not: null },
+      },
+      select: {
+        id: true,
+        title: true,
+        dueAt: true,
+        status: true,
+        workspaceId: true,
+        clientId: true,
+        client: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    for (const task of tasks) {
+      if (!task.dueAt) continue;
+
+      const remainingDays = daysUntil(now, task.dueAt);
+      const isReminderDay = TASK_DUE_REMINDER_DAYS.includes(remainingDays as (typeof TASK_DUE_REMINDER_DAYS)[number]);
+      const isFirstOverdueDay = remainingDays === -1;
+
+      if (!isReminderDay && !isFirstOverdueDay) continue;
+
+      const dedupeKey = buildTaskDueDedupeKey(task.id, remainingDays, task.dueAt);
+      const dueDateLabel = task.dueAt.toISOString().slice(0, 10);
+      const title =
+        remainingDays < 0
+          ? `Task overdue by ${Math.abs(remainingDays)} day${Math.abs(remainingDays) === 1 ? "" : "s"}`
+          : remainingDays === 0
+            ? "Task due today"
+            : `Task due in ${remainingDays} day${remainingDays === 1 ? "" : "s"}`;
+
+      newNotifications.push({
+        workspaceId: task.workspaceId,
+        type: "TASK",
+        status: "OPEN",
+        entityType: "Task",
+        entityId: task.id,
+        title,
+        message: task.client?.name
+          ? `${task.client.name} · ${task.title} is due on ${dueDateLabel}.`
+          : `${task.title} is due on ${dueDateLabel}.`,
+        dueAt: task.dueAt,
+        dedupeKey,
+        metadata: {
+          taskId: task.id,
+          taskTitle: task.title,
+          taskStatus: task.status,
+          dueAt: task.dueAt.toISOString(),
+          remainingDays,
+          clientId: task.clientId,
+          clientName: task.client?.name ?? null,
         },
       });
     }
@@ -162,7 +228,7 @@ export async function GET(req: Request) {
 
     return ok(requestId, {
       generated: newNotifications.length,
-      message: "Renewal notifications processed",
+      message: "Renewal, task due, and inactivity notifications processed",
     });
   } catch (error) {
     logServerError({
