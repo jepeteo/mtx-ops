@@ -44,6 +44,11 @@ enum MilestoneStatus {
   DONE
 }
 
+enum HandoverStatus {
+  OPEN
+  ACKED
+}
+
 enum ServiceType {
   DOMAIN
   HOSTING
@@ -82,6 +87,8 @@ model Workspace {
   tasks       Task[]
   taskDependencies TaskDependency[]
   notes       Note[]
+  decisions   Decision[]
+  handovers   Handover[]
   notifications Notification[]
   activityLog ActivityLog[]
 }
@@ -207,6 +214,44 @@ model Note {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, entityType, entityId, createdAt])
+}
+
+model Decision {
+  id          String   @id @default(uuid())
+  workspaceId String
+  authorId    String
+  entityType  String
+  entityId    String
+  title       String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, entityType, entityId, createdAt])
+}
+
+model Handover {
+  id          String         @id @default(uuid())
+  workspaceId String
+  fromUserId  String
+  toUserId    String
+  entityType  String
+  entityId    String
+  title       String
+  body        String
+  status      HandoverStatus @default(OPEN)
+  ackedAt     DateTime?
+  ackedById   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, createdAt])
   @@index([workspaceId, entityType, entityId, createdAt])
 }
 

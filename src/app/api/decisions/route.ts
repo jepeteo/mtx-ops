@@ -7,9 +7,10 @@ import { entityExistsInWorkspace } from "@/lib/entities/exists";
 
 const EntityTypeSchema = z.enum(["Client", "Project", "Task"]);
 
-const CreateNoteSchema = z.object({
+const CreateDecisionSchema = z.object({
   entityType: EntityTypeSchema,
   entityId: z.string().uuid(),
+  title: z.string().min(1).max(220),
   body: z.string().min(1).max(10000),
 });
 
@@ -18,10 +19,10 @@ export async function POST(req: Request) {
   if ("errorResponse" in auth) return auth.errorResponse;
 
   const body = await req.json().catch(() => null);
-  const parsed = CreateNoteSchema.safeParse(body);
+  const parsed = CreateDecisionSchema.safeParse(body);
 
   if (!parsed.success) {
-    return fail(auth.requestId, "VALIDATION_ERROR", "Invalid note payload", parsed.error.flatten(), 400);
+    return fail(auth.requestId, "VALIDATION_ERROR", "Invalid decision payload", parsed.error.flatten(), 400);
   }
 
   const exists = await entityExistsInWorkspace({
@@ -34,12 +35,13 @@ export async function POST(req: Request) {
     return fail(auth.requestId, "NOT_FOUND", "Entity not found", { entityType: parsed.data.entityType, entityId: parsed.data.entityId }, 404);
   }
 
-  const note = await db.note.create({
+  const decision = await db.decision.create({
     data: {
       workspaceId: auth.session.workspaceId,
       authorId: auth.session.userId,
       entityType: parsed.data.entityType,
       entityId: parsed.data.entityId,
+      title: parsed.data.title,
       body: parsed.data.body,
     },
   });
@@ -47,15 +49,16 @@ export async function POST(req: Request) {
   await logActivity({
     workspaceId: auth.session.workspaceId,
     actorId: auth.session.userId,
-    action: "note.create",
-    entityType: "Note",
-    entityId: note.id,
+    action: "decision.create",
+    entityType: "Decision",
+    entityId: decision.id,
     metadata: {
-      entityType: note.entityType,
-      entityId: note.entityId,
-      bodyLength: note.body.length,
+      entityType: decision.entityType,
+      entityId: decision.entityId,
+      title: decision.title,
+      bodyLength: decision.body.length,
     },
   });
 
-  return ok(auth.requestId, { note }, { status: 201 });
+  return ok(auth.requestId, { decision }, { status: 201 });
 }
