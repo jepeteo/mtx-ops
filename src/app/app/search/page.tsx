@@ -16,9 +16,11 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
   let projects: Array<{ id: string; name: string; keyPrefix: string; status: string }> = [];
   let tasks: Array<{ id: string; title: string; status: string; project: { keyPrefix: string; name: string } | null }> = [];
   let notes: Array<{ id: string; body: string; entityType: string; entityId: string; createdAt: Date }> = [];
+  let services: Array<{ id: string; name: string; provider: string; status: string; clientId: string; client: { name: string } }> = [];
+  let assetLinks: Array<{ id: string; label: string; kind: string; url: string; clientId: string; client: { name: string } }> = [];
 
   if (enabled) {
-    [clients, projects, tasks, notes] = await Promise.all([
+    [clients, projects, tasks, notes, services, assetLinks] = await Promise.all([
       db.client.findMany({
         where: {
           workspaceId: session.workspaceId,
@@ -63,6 +65,49 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
         take: 25,
         orderBy: { createdAt: "desc" },
       }),
+      db.service.findMany({
+        where: {
+          client: {
+            workspaceId: session.workspaceId,
+          },
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { provider: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          provider: true,
+          status: true,
+          clientId: true,
+          client: { select: { name: true } },
+        },
+        take: 25,
+        orderBy: { updatedAt: "desc" },
+      }),
+      db.assetLink.findMany({
+        where: {
+          client: {
+            workspaceId: session.workspaceId,
+          },
+          OR: [
+            { label: { contains: query, mode: "insensitive" } },
+            { kind: { contains: query, mode: "insensitive" } },
+            { url: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          label: true,
+          kind: true,
+          url: true,
+          clientId: true,
+          client: { select: { name: true } },
+        },
+        take: 25,
+        orderBy: { updatedAt: "desc" },
+      }),
     ]);
   }
 
@@ -70,7 +115,7 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
     <div style={{ display: "grid", gap: 16 }}>
       <div>
         <h2 style={{ marginTop: 0, marginBottom: 6 }}>Search</h2>
-        <p style={{ margin: 0, color: "#666" }}>Search clients, projects, tasks, and notes.</p>
+        <p style={{ margin: 0, color: "#666" }}>Search clients, projects, tasks, notes, providers, and domains/links.</p>
       </div>
 
       <form action="/app/search" method="get" style={{ display: "flex", gap: 8, maxWidth: 720 }}>
@@ -123,6 +168,33 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
                 </li>
               ))}
               {tasks.length === 0 ? <li style={{ color: "#666" }}>No matching tasks.</li> : null}
+            </ul>
+          </section>
+
+          <section>
+            <h3>Services / Providers ({services.length})</h3>
+            <ul>
+              {services.map((service) => (
+                <li key={service.id}>
+                  <Link href={`/app/clients/${service.clientId}`}>{service.client.name} · {service.name}</Link>{" "}
+                  <span style={{ color: "#666" }}>({service.provider} · {service.status})</span>
+                </li>
+              ))}
+              {services.length === 0 ? <li style={{ color: "#666" }}>No matching services/providers.</li> : null}
+            </ul>
+          </section>
+
+          <section>
+            <h3>Domains / Links ({assetLinks.length})</h3>
+            <ul>
+              {assetLinks.map((link) => (
+                <li key={link.id}>
+                  <Link href={`/app/clients/${link.clientId}`}>{link.client.name} · {link.label}</Link>{" "}
+                  <span style={{ color: "#666" }}>({link.kind})</span>{" "}
+                  <a href={link.url} target="_blank" rel="noreferrer" style={{ color: "#666" }}>↗</a>
+                </li>
+              ))}
+              {assetLinks.length === 0 ? <li style={{ color: "#666" }}>No matching links/domains.</li> : null}
             </ul>
           </section>
 

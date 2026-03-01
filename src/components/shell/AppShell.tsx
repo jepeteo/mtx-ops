@@ -28,7 +28,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const actions = [
+    { id: "go-dashboard", label: "Go to Dashboard", hint: "Workspace overview", onSelect: () => (window.location.href = "/app") },
     { id: "go-clients", label: "Go to Clients", hint: "Browse client cards", onSelect: () => (window.location.href = "/app/clients") },
+    { id: "go-projects", label: "Go to Projects", hint: "Projects and milestones", onSelect: () => (window.location.href = "/app/projects") },
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },

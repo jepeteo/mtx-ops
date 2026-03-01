@@ -84,8 +84,8 @@
 - Pending in Phase 6: additional UX hardening around reveal errors and optional masking/copy affordances.
 
 ## Phase 7 — Search & Polish
-- Global search baseline is implemented (`/app/search`, `GET /api/search`) for clients/projects/tasks/notes.
+- Global search is implemented (`/app/search`, `GET /api/search`) for clients/projects/tasks/notes/providers/domains-links.
 - App shell navigation and command palette now include Search entry points.
-- Pending in Phase 7 search: broaden coverage to domains/providers and richer action shortcuts.
+- Command palette now includes richer action shortcuts for dashboard/projects/clients/tasks/search/notifications/export.
 - Inactivity reminders are refined with broader client activity sources and weekly post-threshold dedupe buckets.
 - Workspace export baseline is implemented via admin-only `GET /api/export/workspace` returning downloadable JSON and logging export activity.

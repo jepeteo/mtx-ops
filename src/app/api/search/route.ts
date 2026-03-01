@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     return fail(auth.requestId, "VALIDATION_ERROR", "Search query is too long", { maxLength: MAX_QUERY_LENGTH }, 400);
   }
 
-  const [clients, projects, tasks, notes] = await Promise.all([
+  const [clients, projects, tasks, notes, services, assetLinks] = await Promise.all([
     db.client.findMany({
       where: {
         workspaceId: auth.session.workspaceId,
@@ -88,6 +88,59 @@ export async function GET(req: Request) {
       take: 20,
       orderBy: { createdAt: "desc" },
     }),
+    db.service.findMany({
+      where: {
+        client: {
+          workspaceId: auth.session.workspaceId,
+        },
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { provider: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        provider: true,
+        status: true,
+        clientId: true,
+        client: {
+          select: {
+            name: true,
+          },
+        },
+        updatedAt: true,
+      },
+      take: 20,
+      orderBy: { updatedAt: "desc" },
+    }),
+    db.assetLink.findMany({
+      where: {
+        client: {
+          workspaceId: auth.session.workspaceId,
+        },
+        OR: [
+          { label: { contains: query, mode: "insensitive" } },
+          { kind: { contains: query, mode: "insensitive" } },
+          { url: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        label: true,
+        kind: true,
+        url: true,
+        clientId: true,
+        client: {
+          select: {
+            name: true,
+          },
+        },
+        updatedAt: true,
+      },
+      take: 20,
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   return ok(auth.requestId, {
@@ -96,5 +149,7 @@ export async function GET(req: Request) {
     projects,
     tasks,
     notes,
+    services,
+    assetLinks,
   });
 }
