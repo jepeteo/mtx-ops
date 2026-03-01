@@ -19,15 +19,69 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   const selectedType = resolvedSearch.type && allowedTypes.has(resolvedSearch.type) ? resolvedSearch.type : undefined;
   const selectedStatus = resolvedSearch.status && allowedStatus.has(resolvedSearch.status) ? resolvedSearch.status : undefined;
 
-  const notifications = await db.notification.findMany({
-    where: {
-      workspaceId: session.workspaceId,
-      ...(selectedType ? { type: selectedType as "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER" } : {}),
-      ...(selectedStatus ? { status: selectedStatus as "OPEN" | "SNOOZED" | "HANDLED" } : {}),
-    },
-    orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
-    take: 200,
-  });
+  const selectedTypeTab = selectedType ?? "ALL";
+  const selectedStatusTab = selectedStatus ?? "ALL";
+
+  const typeTabs: Array<{ value: "ALL" | "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER"; label: string }> = [
+    { value: "ALL", label: "All" },
+    { value: "RENEWAL", label: "Renewals" },
+    { value: "TASK", label: "Task due" },
+    { value: "INACTIVITY", label: "Inactivity" },
+    { value: "HANDOVER", label: "Handovers" },
+  ];
+
+  const statusTabs: Array<{ value: "ALL" | "OPEN" | "SNOOZED" | "HANDLED"; label: string }> = [
+    { value: "ALL", label: "All" },
+    { value: "OPEN", label: "Open" },
+    { value: "SNOOZED", label: "Snoozed" },
+    { value: "HANDLED", label: "Handled" },
+  ];
+
+  const tabClass = (active: boolean) =>
+    `rounded-md border px-2 py-1 text-xs ${active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground"}`;
+
+  const buildHref = (nextType: string, nextStatus: string) => {
+    const params = new URLSearchParams();
+    if (nextType !== "ALL") params.set("type", nextType);
+    if (nextStatus !== "ALL") params.set("status", nextStatus);
+    const query = params.toString();
+    return query.length > 0 ? `/app/notifications?${query}` : "/app/notifications";
+  };
+
+  const [notifications, typeCountsRaw, statusCountsRaw] = await Promise.all([
+    db.notification.findMany({
+      where: {
+        workspaceId: session.workspaceId,
+        ...(selectedType ? { type: selectedType as "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER" } : {}),
+        ...(selectedStatus ? { status: selectedStatus as "OPEN" | "SNOOZED" | "HANDLED" } : {}),
+      },
+      orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
+      take: 200,
+    }),
+    db.notification.groupBy({
+      by: ["type"],
+      where: { workspaceId: session.workspaceId },
+      _count: { _all: true },
+    }),
+    db.notification.groupBy({
+      by: ["status"],
+      where: { workspaceId: session.workspaceId },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const typeCountMap = new Map<string, number>();
+  for (const row of typeCountsRaw) {
+    typeCountMap.set(row.type, row._count._all);
+  }
+
+  const statusCountMap = new Map<string, number>();
+  for (const row of statusCountsRaw) {
+    statusCountMap.set(row.status, row._count._all);
+  }
+
+  const allTypeCount = typeCountsRaw.reduce((sum, row) => sum + row._count._all, 0);
+  const allStatusCount = statusCountsRaw.reduce((sum, row) => sum + row._count._all, 0);
 
   return (
     <div className="space-y-5">
@@ -43,25 +97,36 @@ export default async function NotificationsPage({ searchParams }: { searchParams
           <CardDescription>Renewals, due dates, inactivity, and handovers in one place.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-3 flex flex-wrap gap-2 text-xs">
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications">
-              All
-            </Link>
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=RENEWAL">
-              Renewals
-            </Link>
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=INACTIVITY">
-              Inactivity
-            </Link>
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?type=TASK">
-              Task due
-            </Link>
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?status=OPEN">
-              Open
-            </Link>
-            <Link className="rounded-md border border-border px-2 py-1" href="/app/notifications?status=HANDLED">
-              Handled
-            </Link>
+          <div className="mb-4 space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Type</div>
+              <div className="flex flex-wrap gap-2">
+                {typeTabs.map((tab) => (
+                  <Link
+                    key={tab.value}
+                    className={tabClass(selectedTypeTab === tab.value)}
+                    href={buildHref(tab.value, selectedStatusTab)}
+                  >
+                    {tab.label} ({tab.value === "ALL" ? allTypeCount : (typeCountMap.get(tab.value) ?? 0)})
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</div>
+              <div className="flex flex-wrap gap-2">
+                {statusTabs.map((tab) => (
+                  <Link
+                    key={tab.value}
+                    className={tabClass(selectedStatusTab === tab.value)}
+                    href={buildHref(selectedTypeTab, tab.value)}
+                  >
+                    {tab.label} ({tab.value === "ALL" ? allStatusCount : (statusCountMap.get(tab.value) ?? 0)})
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
