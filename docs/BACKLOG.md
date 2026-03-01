@@ -78,6 +78,7 @@ Status note (2026-03-01): inactivity reminder refinement is implemented in cron 
 Status note (2026-03-01): workspace export baseline is implemented via admin-only `GET /api/export/workspace`, returning downloadable deterministic JSON and writing `workspace.export` activity logs.
 Status note (2026-03-01): admin operations monitoring page is implemented at `/app/admin/operations` for attachment cleanup and storage-delete failure visibility.
 Status note (2026-03-01): admin operations page now includes range/view filters to isolate recent cleanup activity and failures.
+Status note (2026-03-01): failure rows in admin operations include direct entity links (when metadata exists) for faster navigation.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders

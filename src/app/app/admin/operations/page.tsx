@@ -14,6 +14,24 @@ function getString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function getEntityHref(entityType: string | null, entityId: string | null) {
+  if (!entityType || !entityId) return null;
+
+  if (entityType === "Client") {
+    return `/app/clients/${entityId}`;
+  }
+
+  if (entityType === "Project") {
+    return "/app/projects";
+  }
+
+  if (entityType === "Task") {
+    return "/app/tasks";
+  }
+
+  return null;
+}
+
 type Search = {
   range?: string;
   view?: string;
@@ -72,12 +90,17 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
     .filter((log) => log.action === "attachment.unlink")
     .map((log) => {
       const metadata = asMetadataMap(log.metadata);
+      const entityType = getString(metadata.entityType);
+      const entityId = getString(metadata.entityId);
       return {
         id: log.id,
         createdAt: log.createdAt,
         attachmentId: log.entityId,
         fileName: getString(metadata.fileName) ?? "—",
         storageDeleteError: getString(metadata.storageDeleteError),
+        entityType,
+        entityId,
+        entityHref: getEntityHref(entityType, entityId),
         actorId: log.actorId,
       };
     })
@@ -198,6 +221,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
                 <tr className="text-muted-foreground">
                   <th className="py-2">When</th>
                   <th className="py-2">Attachment</th>
+                  <th className="py-2">Entity</th>
                   <th className="py-2">Error</th>
                   <th className="py-2">Actor</th>
                 </tr>
@@ -210,13 +234,23 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
                       <div className="font-mono text-xs">{event.attachmentId}</div>
                       <div className="text-muted-foreground">{event.fileName}</div>
                     </td>
+                    <td className="py-2">
+                      {event.entityHref && event.entityType ? (
+                        <Link href={event.entityHref} className="underline-offset-2 hover:underline">
+                          {event.entityType}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                      {event.entityId ? <div className="font-mono text-xs text-muted-foreground">{event.entityId}</div> : null}
+                    </td>
                     <td className="py-2 text-red-600">{event.storageDeleteError}</td>
                     <td className="py-2 font-mono text-xs">{event.actorId}</td>
                   </tr>
                 ))}
                 {cleanupFailures.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-4 text-muted-foreground">
+                    <td colSpan={5} className="py-4 text-muted-foreground">
                       No storage delete failures detected in ActivityLog.
                     </td>
                   </tr>
