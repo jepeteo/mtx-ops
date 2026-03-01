@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { CreateTaskForm } from "@/components/tasks/CreateTaskForm";
 import { TaskRowActions } from "@/components/tasks/TaskRowActions";
+import { AddTaskDependencyForm } from "@/components/tasks/AddTaskDependencyForm";
 
 export default async function TasksPage() {
 	const session = await requireSession();
@@ -22,6 +23,12 @@ export default async function TasksPage() {
 						id: true,
 						name: true,
 						keyPrefix: true,
+					},
+				},
+				_count: {
+					select: {
+						blockedBy: true,
+						blocks: true,
 					},
 				},
 			},
@@ -59,6 +66,10 @@ export default async function TasksPage() {
 
 			<CreateTaskForm clients={clients} projects={projects} />
 
+			{tasks.length > 1 ? (
+				<AddTaskDependencyForm tasks={tasks.map((task) => ({ id: task.id, title: task.title }))} />
+			) : null}
+
 			<div style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
 				<table style={{ width: "100%", borderCollapse: "collapse" }}>
 					<thead>
@@ -68,6 +79,7 @@ export default async function TasksPage() {
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Client</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Due</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
+							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Deps</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Actions</th>
 						</tr>
 					</thead>
@@ -85,6 +97,9 @@ export default async function TasksPage() {
 									{task.dueAt ? new Date(task.dueAt).toLocaleDateString() : "—"}
 								</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{task.status}</td>
+								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+									Blocked by {task._count.blockedBy} · Blocks {task._count.blocks}
+								</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", minWidth: 260 }}>
 									<TaskRowActions taskId={task.id} status={task.status} />
 								</td>
@@ -92,7 +107,7 @@ export default async function TasksPage() {
 						))}
 						{tasks.length === 0 ? (
 							<tr>
-								<td colSpan={6} style={{ padding: 14, color: "#666" }}>
+								<td colSpan={7} style={{ padding: 14, color: "#666" }}>
 									No tasks yet.
 								</td>
 							</tr>
