@@ -102,3 +102,4 @@
 - Admin operations includes an admin-only manual trigger action to run attachment cleanup on demand.
 - Manual cleanup results now persist as a status banner on operations page after refresh/navigation.
 - Status banner now includes a clear action that keeps current range/view filters.
+- Status banner now auto-clears cleanup result params after 10s while preserving current filters.

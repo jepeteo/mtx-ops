@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RunAttachmentCleanupButton } from "@/components/admin/RunAttachmentCleanupButton";
+import { AutoClearCleanupStatus } from "@/components/admin/AutoClearCleanupStatus";
 
 type MetadataMap = Record<string, unknown>;
 
@@ -156,6 +157,8 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
 
   return (
     <div className="space-y-5">
+      <AutoClearCleanupStatus delayMs={10000} />
+
       <div>
         <div className="text-xs font-semibold tracking-wider text-muted-foreground">ADMIN</div>
         <h1 className="mt-1 text-xl font-semibold">Operations</h1>
@@ -177,6 +180,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           <Link href={clearStatusHref} className="underline underline-offset-2">
             Clear status
           </Link>
+          <span className="ml-2 text-xs text-emerald-700">Auto-clears in 10s</span>
         </div>
       ) : null}
 
@@ -186,6 +190,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           <Link href={clearStatusHref} className="underline underline-offset-2">
             Clear status
           </Link>
+          <span className="ml-2 text-xs text-red-700">Auto-clears in 10s</span>
         </div>
       ) : null}
 
