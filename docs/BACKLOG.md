@@ -79,6 +79,7 @@ Status note (2026-03-01): workspace export baseline is implemented via admin-onl
 Status note (2026-03-01): admin operations monitoring page is implemented at `/app/admin/operations` for attachment cleanup and storage-delete failure visibility.
 Status note (2026-03-01): admin operations page now includes range/view filters to isolate recent cleanup activity and failures.
 Status note (2026-03-01): failure rows in admin operations include direct entity links (when metadata exists) for faster navigation.
+Status note (2026-03-01): admin operations page now includes summary counters for cleanup events, failures, and failure rate within the selected range.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders

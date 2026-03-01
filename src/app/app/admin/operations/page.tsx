@@ -107,6 +107,10 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
     .filter((row) => Boolean(row.storageDeleteError))
     .slice(0, 100);
 
+  const unlinkEventsInRange = logs.filter((log) => log.action === "attachment.unlink").length;
+  const failureRate =
+    unlinkEventsInRange > 0 ? Math.round((cleanupFailures.length / unlinkEventsInRange) * 100) : 0;
+
   const buildFilterHref = (range: string, view: string) => {
     const params = new URLSearchParams();
     params.set("range", range);
@@ -169,6 +173,36 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cleanup Events</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{cleanupEvents.length}</div>
+            <div className="text-xs text-muted-foreground">In selected range</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Storage Failures</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold text-red-600">{cleanupFailures.length}</div>
+            <div className="text-xs text-muted-foreground">In selected range</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Failure Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{failureRate}%</div>
+            <div className="text-xs text-muted-foreground">From {unlinkEventsInRange} unlink events</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {selectedView === "all" || selectedView === "cleanup" ? (
       <Card>
