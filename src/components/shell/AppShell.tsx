@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Bell, LayoutDashboard, Users, Layers, KanbanSquare, Settings } from "lucide-react";
+import { Bell, LayoutDashboard, Users, Layers, KanbanSquare, Settings, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { CommandPalette } from "./CommandPalette";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,6 +14,7 @@ const nav = [
   { href: "/app/clients", label: "Clients", icon: Users },
   { href: "/app/projects", label: "Projects", icon: Layers },
   { href: "/app/tasks", label: "Tasks", icon: KanbanSquare },
+  { href: "/app/search", label: "Search", icon: Search },
   { href: "/app/notifications", label: "Notifications", icon: Bell },
   { href: "/app/admin/users", label: "Admin", icon: Settings },
 ];
@@ -29,6 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const actions = [
     { id: "go-clients", label: "Go to Clients", hint: "Browse client cards", onSelect: () => (window.location.href = "/app/clients") },
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
+    { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
   ];
 

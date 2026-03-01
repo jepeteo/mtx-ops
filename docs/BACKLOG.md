@@ -66,6 +66,8 @@ Status note (2026-03-01): vault pointer CRUD baseline is implemented (`POST /api
 ### G2 — Reveal secret + audit
 
 ## Epic H — Search & Quality
+Status note (2026-03-01): global search baseline is implemented with `/app/search` + `GET /api/search` scoped to workspace and grouped for clients/projects/tasks/notes. App shell nav and command palette include Search shortcuts.
+
 ### H1 — Global search
 ### H2 — Inactivity reminders
 ### H3 — Export

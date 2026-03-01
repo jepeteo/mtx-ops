@@ -83,7 +83,8 @@
 - Pending in Phase 6: additional UX hardening around reveal errors and optional masking/copy affordances.
 
 ## Phase 7 — Search & Polish
-- Global search (clients/domains/providers/tasks/notes)
-- Command palette actions
+- Global search baseline is implemented (`/app/search`, `GET /api/search`) for clients/projects/tasks/notes.
+- App shell navigation and command palette now include Search entry points.
+- Pending in Phase 7 search: broaden coverage to domains/providers and richer action shortcuts.
 - Inactivity notifications
 - Export workspace JSON

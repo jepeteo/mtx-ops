@@ -44,6 +44,6 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Clear UX for vault unreachable
 
 ## Phase 7 — Polish
-- Global search + command palette
+- Global search + command palette (baseline implemented for clients/projects/tasks/notes)
 - Inactivity notifications
 - Export (workspace JSON)
