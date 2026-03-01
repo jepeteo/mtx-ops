@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 import { env } from "@/lib/env";
@@ -74,6 +74,27 @@ export async function createAttachmentPresign(input: {
     },
     maxUploadBytes: MAX_UPLOAD_BYTES,
   };
+}
+
+export async function deleteAttachmentObject(storageKey: string) {
+  const cfg = requireStorageConfig();
+
+  const client = new S3Client({
+    region: cfg.region,
+    endpoint: cfg.endpoint,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: cfg.accessKeyId,
+      secretAccessKey: cfg.secretAccessKey,
+    },
+  });
+
+  const command = new DeleteObjectCommand({
+    Bucket: cfg.bucket,
+    Key: storageKey,
+  });
+
+  await client.send(command);
 }
 
 export function getAttachmentPublicUrl(storageKey: string) {

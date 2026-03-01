@@ -38,6 +38,7 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Attach to entities (Client/Project/Task)
 - Permissions (implemented: Admin/Owner write, Member read-only upload UI)
 - Unlink controls (implemented with audited Admin/Owner actions)
+- Storage cleanup on orphan unlink (implemented via S3 delete attempt + server logging)
 
 ## Phase 6 — Vaultwarden
 - Vault pointers CRUD
