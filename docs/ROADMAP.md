@@ -58,7 +58,8 @@
 - Client Card now includes note capture and timeline-style note listing for continuity.
 - Decisions baseline is implemented with `POST /api/decisions` and Client Card decision capture/list.
 - Handovers baseline is implemented with `POST /api/handovers` and `POST /api/handovers/:id/ack` plus Client Card handover capture/ack/list.
-- Pending in Phase 4: unified client timeline across notes/decisions/handovers and additional timeline UX polish.
+- Unified Client timeline baseline is now available by merging notes, decisions, and handovers chronologically on Client Card.
+- Pending in Phase 4: additional timeline UX polish.
 
 ## Phase 5 — Attachments
 - Upload + storage integration

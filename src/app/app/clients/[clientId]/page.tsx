@@ -69,6 +69,35 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
 
   const authorMap = new Map(activeUsers.map((user) => [user.id, user.name || user.email]));
 
+  const timeline = [
+    ...notes.map((note) => ({
+      id: `note:${note.id}`,
+      createdAt: note.createdAt,
+      type: "Note" as const,
+      title: "Note added",
+      body: note.body,
+      actorId: note.authorId,
+    })),
+    ...decisions.map((decision) => ({
+      id: `decision:${decision.id}`,
+      createdAt: decision.createdAt,
+      type: "Decision" as const,
+      title: decision.title,
+      body: decision.body,
+      actorId: decision.authorId,
+    })),
+    ...handovers.map((handover) => ({
+      id: `handover:${handover.id}`,
+      createdAt: handover.createdAt,
+      type: "Handover" as const,
+      title: handover.title,
+      body: handover.body,
+      actorId: handover.fromUserId,
+      toUserId: handover.toUserId,
+      status: handover.status,
+    })),
+  ].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -228,6 +257,25 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
           </div>
         ))}
         {handovers.length === 0 ? <div style={{ color: "#666" }}>No handovers yet.</div> : null}
+      </div>
+
+      <h3>Client timeline</h3>
+      <div style={{ display: "grid", gap: 8 }}>
+        {timeline.map((item) => (
+          <div key={item.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+              {item.type} · {authorMap.get(item.actorId) || "Unknown"} · {new Date(item.createdAt).toLocaleString()}
+            </div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{item.title}</div>
+            {item.type === "Handover" ? (
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                To {item.toUserId ? authorMap.get(item.toUserId) || "Unknown" : "Unknown"} · {item.status}
+              </div>
+            ) : null}
+            <div style={{ whiteSpace: "pre-wrap" }}>{item.body}</div>
+          </div>
+        ))}
+        {timeline.length === 0 ? <div style={{ color: "#666" }}>No timeline activity yet.</div> : null}
       </div>
     </div>
   );
