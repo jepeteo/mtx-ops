@@ -76,6 +76,12 @@
 - Reveal flow (fails if vault unreachable)
 - Audit entry for reveal
 
+### Current status (2026-03-01)
+- Vault pointer CRUD baseline is implemented with `POST /api/vault/pointers` and `PATCH/DELETE /api/vault/pointers/:id`.
+- Client Card now includes create/update/delete pointer controls and reveal actions wired to `POST /api/vault/reveal`.
+- Reveal and pointer mutations write ActivityLog entries; reveal metadata excludes secret value.
+- Pending in Phase 6: additional UX hardening around reveal errors and optional masking/copy affordances.
+
 ## Phase 7 — Search & Polish
 - Global search (clients/domains/providers/tasks/notes)
 - Command palette actions

@@ -6,6 +6,8 @@ import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
 import { DeleteServiceButton } from "@/components/clients/DeleteServiceButton";
 import { UpdateServiceStatusButton } from "@/components/clients/UpdateServiceStatusButton";
 import { UpdateServiceReminderRules } from "@/components/clients/UpdateServiceReminderRules";
+import { CreateVaultPointerForm } from "@/components/clients/CreateVaultPointerForm";
+import { VaultPointerActions } from "@/components/clients/VaultPointerActions";
 import { CreateNoteForm } from "@/components/notes/CreateNoteForm";
 import { CreateDecisionForm } from "@/components/decisions/CreateDecisionForm";
 import { CreateHandoverForm } from "@/components/handovers/CreateHandoverForm";
@@ -209,14 +211,23 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
       </ul>
 
       <h3>Credentials (Vault pointers)</h3>
-      <ul>
-        {client.vaultPointers.map((v) => (
-          <li key={v.id}>
-            {v.label} — item <code>{v.vaultItemId}</code> field <code>{v.fieldName}</code>
-          </li>
+      <CreateVaultPointerForm clientId={client.id} />
+      <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+        {client.vaultPointers.map((pointer) => (
+          <VaultPointerActions
+            key={pointer.id}
+            clientId={client.id}
+            pointer={{
+              id: pointer.id,
+              label: pointer.label,
+              vaultItemId: pointer.vaultItemId,
+              fieldName: pointer.fieldName,
+              usernameHint: pointer.usernameHint ?? null,
+            }}
+          />
         ))}
-        {client.vaultPointers.length === 0 && <li style={{ color: "#666" }}>No vault pointers yet.</li>}
-      </ul>
+        {client.vaultPointers.length === 0 ? <div style={{ color: "#666" }}>No vault pointers yet.</div> : null}
+      </div>
 
       <h3>Notes</h3>
       <CreateNoteForm entityType="Client" entityId={client.id} />

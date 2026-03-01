@@ -60,6 +60,8 @@ Status note (2026-03-01): attachments baseline is implemented with `POST /api/at
 ### F2 — Link to entities
 
 ## Epic G — Vaultwarden
+Status note (2026-03-01): vault pointer CRUD baseline is implemented (`POST /api/vault/pointers`, `PATCH/DELETE /api/vault/pointers/:id`) with Client Card create/update/delete/reveal controls and audit logging for reveal actions.
+
 ### G1 — Vault pointer CRUD
 ### G2 — Reveal secret + audit
 
