@@ -95,3 +95,4 @@
 - Inactivity reminders are refined with broader client activity sources and weekly post-threshold dedupe buckets.
 - Workspace export baseline is implemented via admin-only `GET /api/export/workspace` returning downloadable JSON and logging export activity.
 - Admin operations monitoring page is implemented at `/app/admin/operations` to track attachment cleanup events and storage-delete failures from ActivityLog.
+- Admin operations page now includes lightweight range/view filters (`24h/7d/30d/all`, `all/cleanup/failures`) for faster incident triage.

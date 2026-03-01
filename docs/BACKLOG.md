@@ -77,6 +77,7 @@ Status note (2026-03-01): global search is expanded to provider/domain-link cove
 Status note (2026-03-01): inactivity reminder refinement is implemented in cron with expanded client activity signals (entity updates + client-linked notes/decisions/handovers/attachments + client activity logs) and weekly dedupe buckets after threshold.
 Status note (2026-03-01): workspace export baseline is implemented via admin-only `GET /api/export/workspace`, returning downloadable deterministic JSON and writing `workspace.export` activity logs.
 Status note (2026-03-01): admin operations monitoring page is implemented at `/app/admin/operations` for attachment cleanup and storage-delete failure visibility.
+Status note (2026-03-01): admin operations page now includes range/view filters to isolate recent cleanup activity and failures.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders

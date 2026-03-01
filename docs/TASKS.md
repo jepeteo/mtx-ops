@@ -51,3 +51,4 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Inactivity notifications (refined: broader activity sources + weekly reminder buckets)
 - Export (workspace JSON baseline implemented via admin-only API)
 - Admin operations monitoring (implemented for attachment cleanup visibility)
+- Admin operations filtering (implemented with range/view controls)

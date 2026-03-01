@@ -14,8 +14,32 @@ function getString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-export default async function AdminOperationsPage() {
+type Search = {
+  range?: string;
+  view?: string;
+};
+
+const RANGE_HOURS: Record<string, number | null> = {
+  "24h": 24,
+  "7d": 24 * 7,
+  "30d": 24 * 30,
+  all: null,
+};
+
+const VIEW_OPTIONS = new Set(["all", "cleanup", "failures"]);
+
+export default async function AdminOperationsPage({ searchParams }: { searchParams?: Promise<Search> }) {
   const session = await requireRole("ADMIN");
+  const resolvedSearch = (await searchParams) ?? {};
+
+  const selectedRange =
+    resolvedSearch.range && Object.keys(RANGE_HOURS).includes(resolvedSearch.range)
+      ? resolvedSearch.range
+      : "7d";
+  const selectedView = resolvedSearch.view && VIEW_OPTIONS.has(resolvedSearch.view) ? resolvedSearch.view : "all";
+
+  const rangeHours = RANGE_HOURS[selectedRange];
+  const since = rangeHours ? new Date(Date.now() - rangeHours * 60 * 60 * 1000) : null;
 
   const logs = await db.activityLog.findMany({
     where: {
@@ -23,6 +47,7 @@ export default async function AdminOperationsPage() {
       action: {
         in: ["attachment.cleanup", "attachment.unlink"],
       },
+      ...(since ? { createdAt: { gte: since } } : {}),
     },
     orderBy: { createdAt: "desc" },
     take: 300,
@@ -59,6 +84,16 @@ export default async function AdminOperationsPage() {
     .filter((row) => Boolean(row.storageDeleteError))
     .slice(0, 100);
 
+  const buildFilterHref = (range: string, view: string) => {
+    const params = new URLSearchParams();
+    params.set("range", range);
+    params.set("view", view);
+    return `/app/admin/operations?${params.toString()}`;
+  };
+
+  const tabClass = (active: boolean) =>
+    `rounded-md border px-3 py-1 ${active ? "border-foreground bg-secondary" : "border-border"}`;
+
   return (
     <div className="space-y-5">
       <div>
@@ -76,6 +111,43 @@ export default async function AdminOperationsPage() {
         </Link>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Range</div>
+            <div className="flex flex-wrap gap-2 text-sm">
+              {(["24h", "7d", "30d", "all"] as const).map((range) => (
+                <Link
+                  key={range}
+                  className={tabClass(selectedRange === range)}
+                  href={buildFilterHref(range, selectedView)}
+                >
+                  {range}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">View</div>
+            <div className="flex flex-wrap gap-2 text-sm">
+              {(["all", "cleanup", "failures"] as const).map((view) => (
+                <Link
+                  key={view}
+                  className={tabClass(selectedView === view)}
+                  href={buildFilterHref(selectedRange, view)}
+                >
+                  {view}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedView === "all" || selectedView === "cleanup" ? (
       <Card>
         <CardHeader>
           <CardTitle>Attachment cleanup events ({cleanupEvents.length})</CardTitle>
@@ -112,7 +184,9 @@ export default async function AdminOperationsPage() {
           </div>
         </CardContent>
       </Card>
+      ) : null}
 
+      {selectedView === "all" || selectedView === "failures" ? (
       <Card>
         <CardHeader>
           <CardTitle>Storage delete failures ({cleanupFailures.length})</CardTitle>
@@ -152,6 +226,7 @@ export default async function AdminOperationsPage() {
           </div>
         </CardContent>
       </Card>
+      ) : null}
     </div>
   );
 }
