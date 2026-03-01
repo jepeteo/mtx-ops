@@ -8,15 +8,23 @@ type ClientOption = {
   name: string;
 };
 
+type ProjectOption = {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  clientId: string;
+};
+
 type TaskStatus = "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE";
 
-export function CreateTaskForm({ clients }: { clients: ClientOption[] }) {
+export function CreateTaskForm({ clients, projects }: { clients: ClientOption[]; projects: ProjectOption[] }) {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [dueAt, setDueAt] = useState("");
   const [clientId, setClientId] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +41,7 @@ export function CreateTaskForm({ clients }: { clients: ClientOption[] }) {
         status,
         dueAt: dueAt ? new Date(`${dueAt}T00:00:00.000Z`).toISOString() : null,
         clientId: clientId || null,
+        projectId: projectId || null,
       }),
     });
 
@@ -49,6 +58,7 @@ export function CreateTaskForm({ clients }: { clients: ClientOption[] }) {
     setStatus("TODO");
     setDueAt("");
     setClientId("");
+    setProjectId("");
     setSaving(false);
     router.refresh();
   }
@@ -65,7 +75,7 @@ export function CreateTaskForm({ clients }: { clients: ClientOption[] }) {
         style={{ padding: 8 }}
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <select value={status} onChange={(event) => setStatus(event.target.value as TaskStatus)} style={{ padding: 8 }}>
           <option value="TODO">TODO</option>
           <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -74,12 +84,23 @@ export function CreateTaskForm({ clients }: { clients: ClientOption[] }) {
         </select>
 
         <input type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} style={{ padding: 8 }} />
+      </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <select value={clientId} onChange={(event) => setClientId(event.target.value)} style={{ padding: 8 }}>
           <option value="">No client</option>
           {clients.map((client) => (
             <option key={client.id} value={client.id}>
               {client.name}
+            </option>
+          ))}
+        </select>
+
+        <select value={projectId} onChange={(event) => setProjectId(event.target.value)} style={{ padding: 8 }}>
+          <option value="">No project</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.keyPrefix} · {project.name}
             </option>
           ))}
         </select>

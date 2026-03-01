@@ -7,7 +7,7 @@ import { TaskRowActions } from "@/components/tasks/TaskRowActions";
 export default async function TasksPage() {
 	const session = await requireSession();
 
-	const [tasks, clients] = await Promise.all([
+	const [tasks, clients, projects] = await Promise.all([
 		db.task.findMany({
 			where: { workspaceId: session.workspaceId },
 			include: {
@@ -15,6 +15,13 @@ export default async function TasksPage() {
 					select: {
 						id: true,
 						name: true,
+					},
+				},
+				project: {
+					select: {
+						id: true,
+						name: true,
+						keyPrefix: true,
 					},
 				},
 			},
@@ -30,6 +37,17 @@ export default async function TasksPage() {
 			orderBy: { name: "asc" },
 			take: 200,
 		}),
+		db.project.findMany({
+			where: { workspaceId: session.workspaceId },
+			select: {
+				id: true,
+				name: true,
+				keyPrefix: true,
+				clientId: true,
+			},
+			orderBy: [{ updatedAt: "desc" }],
+			take: 200,
+		}),
 	]);
 
 	return (
@@ -39,13 +57,14 @@ export default async function TasksPage() {
 				<p style={{ color: "#666", margin: 0 }}>Track due work and surface due-date notifications.</p>
 			</div>
 
-			<CreateTaskForm clients={clients} />
+			<CreateTaskForm clients={clients} projects={projects} />
 
 			<div style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
 				<table style={{ width: "100%", borderCollapse: "collapse" }}>
 					<thead>
 						<tr style={{ textAlign: "left", background: "#fafafa" }}>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Title</th>
+							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Project</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Client</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Due</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
@@ -56,6 +75,9 @@ export default async function TasksPage() {
 						{tasks.map((task) => (
 							<tr key={task.id}>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", fontWeight: 500 }}>{task.title}</td>
+								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+									{task.project ? `${task.project.keyPrefix} · ${task.project.name}` : "—"}
+								</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
 									{task.client ? <Link href={`/app/clients/${task.client.id}`}>{task.client.name}</Link> : "—"}
 								</td>
@@ -70,7 +92,7 @@ export default async function TasksPage() {
 						))}
 						{tasks.length === 0 ? (
 							<tr>
-								<td colSpan={5} style={{ padding: 14, color: "#666" }}>
+								<td colSpan={6} style={{ padding: 14, color: "#666" }}>
 									No tasks yet.
 								</td>
 							</tr>

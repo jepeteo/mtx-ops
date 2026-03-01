@@ -11,6 +11,7 @@ const CreateTaskSchema = z.object({
   status: StatusSchema.default("TODO"),
   dueAt: z.string().datetime().optional().nullable(),
   clientId: z.string().uuid().optional().nullable(),
+  projectId: z.string().uuid().optional().nullable(),
 });
 
 export async function GET(req: Request) {
@@ -38,6 +39,13 @@ export async function GET(req: Request) {
           name: true,
         },
       },
+      project: {
+        select: {
+          id: true,
+          name: true,
+          keyPrefix: true,
+        },
+      },
     },
     take: 200,
   });
@@ -61,6 +69,7 @@ export async function POST(req: Request) {
       status: form.get("status") || "TODO",
       dueAt: form.get("dueAt") ? `${form.get("dueAt")}T00:00:00.000Z` : null,
       clientId: form.get("clientId") || null,
+      projectId: form.get("projectId") || null,
     };
   }
 
@@ -83,19 +92,55 @@ export async function POST(req: Request) {
     }
   }
 
+  let scopedProject: { id: string; clientId: string } | null = null;
+  if (parsed.data.projectId) {
+    scopedProject = await db.project.findFirst({
+      where: {
+        id: parsed.data.projectId,
+        workspaceId: auth.session.workspaceId,
+      },
+      select: {
+        id: true,
+        clientId: true,
+      },
+    });
+
+    if (!scopedProject) {
+      return fail(auth.requestId, "NOT_FOUND", "Project not found", { projectId: parsed.data.projectId }, 404);
+    }
+
+    if (parsed.data.clientId && parsed.data.clientId !== scopedProject.clientId) {
+      return fail(
+        auth.requestId,
+        "VALIDATION_ERROR",
+        "Task clientId must match selected project client",
+        { clientId: parsed.data.clientId, projectId: parsed.data.projectId },
+        400,
+      );
+    }
+  }
+
   const task = await db.task.create({
     data: {
       workspaceId: auth.session.workspaceId,
       title: parsed.data.title,
       status: parsed.data.status,
       dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
-      clientId: parsed.data.clientId ?? null,
+      clientId: scopedProject?.clientId ?? parsed.data.clientId ?? null,
+      projectId: scopedProject?.id ?? null,
     },
     include: {
       client: {
         select: {
           id: true,
           name: true,
+        },
+      },
+      project: {
+        select: {
+          id: true,
+          name: true,
+          keyPrefix: true,
         },
       },
     },
@@ -112,6 +157,7 @@ export async function POST(req: Request) {
       status: task.status,
       dueAt: task.dueAt?.toISOString() ?? null,
       clientId: task.clientId,
+      projectId: task.projectId,
     },
   });
 

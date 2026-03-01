@@ -32,6 +32,13 @@ enum TaskStatus {
   DONE
 }
 
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
 enum ServiceType {
   DOMAIN
   HOSTING
@@ -65,6 +72,7 @@ model Workspace {
 
   users       User[]
   clients     Client[]
+  projects    Project[]
   tasks       Task[]
   notifications Notification[]
   activityLog ActivityLog[]
@@ -96,15 +104,36 @@ model Client {
 
   workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   services      Service[]
+  projects      Project[]
   tasks         Task[]
   assetLinks    AssetLink[]
   vaultPointers VaultPointer[]
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  workspaceId String
+  clientId    String
+  name        String
+  keyPrefix   String
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@index([workspaceId, status, updatedAt])
+  @@index([clientId, updatedAt])
+  @@unique([workspaceId, keyPrefix])
 }
 
 model Task {
   id          String     @id @default(uuid())
   workspaceId String
   clientId    String?
+  projectId   String?
   title       String
   status      TaskStatus @default(TODO)
   dueAt       DateTime?
@@ -113,9 +142,11 @@ model Task {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   client    Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, status, dueAt])
   @@index([clientId, dueAt])
+  @@index([projectId, dueAt])
 }
 
 model Service {

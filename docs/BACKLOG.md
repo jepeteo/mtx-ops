@@ -38,6 +38,8 @@ Status note (2026-03-01): services CRUD baseline is implemented; renewal/task-du
 ### C3 — Notification Center
 
 ## Epic D — Projects & Tasks
+Status note (2026-03-01): projects baseline is implemented with keyPrefix uniqueness, client-scoped project creation/listing, and project-linked task APIs (`/api/projects/:id/tasks`) plus basic `/app/projects` UI.
+
 ### D1 — Projects + keyPrefix
 ### D2 — Milestones
 ### D3 — Tasks (Kanban + list)
