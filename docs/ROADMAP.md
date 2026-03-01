@@ -99,3 +99,4 @@
 - Failure rows in admin operations now include direct entity links (client/project/task context) when metadata is available.
 - Admin operations now surfaces top-level counters (cleanup events, failures, failure rate) for at-a-glance health in the selected range.
 - Admin operations now also shows a latest cleanup run summary timestamp sourced from the most recent `attachment.cleanup` event.
+- Admin operations includes an admin-only manual trigger action to run attachment cleanup on demand.

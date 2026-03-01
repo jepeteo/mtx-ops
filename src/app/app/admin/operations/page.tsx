@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RunAttachmentCleanupButton } from "@/components/admin/RunAttachmentCleanupButton";
 
 type MetadataMap = Record<string, unknown>;
 
@@ -156,6 +157,15 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           Operations
         </Link>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RunAttachmentCleanupButton />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -55,3 +55,4 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Admin operations entity links (implemented for failure row navigation)
 - Admin operations counters (implemented for cleanup/failure at-a-glance health)
 - Admin operations latest cleanup summary (implemented)
+- Admin operations manual cleanup trigger (implemented)
