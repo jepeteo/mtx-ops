@@ -39,6 +39,11 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum MilestoneStatus {
+  OPEN
+  DONE
+}
+
 enum ServiceType {
   DOMAIN
   HOSTING
@@ -73,6 +78,7 @@ model Workspace {
   users       User[]
   clients     Client[]
   projects    Project[]
+  milestones  Milestone[]
   tasks       Task[]
   taskDependencies TaskDependency[]
   notifications Notification[]
@@ -123,11 +129,29 @@ model Project {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
   tasks     Task[]
 
   @@index([workspaceId, status, updatedAt])
   @@index([clientId, updatedAt])
   @@unique([workspaceId, keyPrefix])
+}
+
+model Milestone {
+  id          String          @id @default(uuid())
+  workspaceId String
+  projectId   String
+  title       String
+  dueAt       DateTime?
+  status      MilestoneStatus @default(OPEN)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status, dueAt])
+  @@index([projectId, dueAt])
 }
 
 model Task {

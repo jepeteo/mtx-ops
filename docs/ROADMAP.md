@@ -44,7 +44,8 @@
 - Task dependency baseline is implemented via `POST /api/tasks/:id/dependencies` and visible dependency counts in `/app/tasks`.
 - `/app/tasks` now supports list and baseline kanban views (`?view=kanban`) with status buckets.
 - Inline edit workflows are now available for project name/prefix/status and task title/project/due-date/status.
-- Pending in Phase 3: milestones.
+- Milestones baseline is implemented with `GET/POST /api/projects/:id/milestones`, `PATCH/DELETE /api/milestones/:id`, and `/app/projects` milestone controls.
+- Pending in Phase 3: no major gaps; continue iteration on UX and robustness.
 
 ## Phase 4 — Knowledge & Continuity
 - Notes

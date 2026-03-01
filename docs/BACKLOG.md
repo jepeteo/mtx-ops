@@ -38,7 +38,7 @@ Status note (2026-03-01): services CRUD baseline is implemented; renewal/task-du
 ### C3 — Notification Center
 
 ## Epic D — Projects & Tasks
-Status note (2026-03-01): projects baseline is implemented with keyPrefix uniqueness, client-scoped project create/list/status-update/delete, project-linked task APIs (`/api/projects/:id/tasks`), task dependency baseline (`POST /api/tasks/:id/dependencies`), list + baseline kanban task views, and inline project/task editing controls in `/app/projects` and `/app/tasks`.
+Status note (2026-03-01): projects baseline is implemented with keyPrefix uniqueness, client-scoped project create/list/status-update/delete, project-linked task APIs (`/api/projects/:id/tasks`), task dependency baseline (`POST /api/tasks/:id/dependencies`), milestone baseline (`GET/POST /api/projects/:id/milestones`, `PATCH/DELETE /api/milestones/:id`), list + baseline kanban task views, and inline project/task/milestone editing controls in `/app/projects` and `/app/tasks`.
 
 ### D1 — Projects + keyPrefix
 ### D2 — Milestones
