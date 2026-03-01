@@ -13,6 +13,7 @@ import { CreateDecisionForm } from "@/components/decisions/CreateDecisionForm";
 import { CreateHandoverForm } from "@/components/handovers/CreateHandoverForm";
 import { AckHandoverButton } from "@/components/handovers/AckHandoverButton";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
+import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
@@ -320,6 +321,7 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
               <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
                 {link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
               </div>
+              {canManageAttachments ? <AttachmentLinkActions linkId={link.id} /> : null}
               {fileUrl ? (
                 <a href={fileUrl} target="_blank" rel="noreferrer">
                   Open attachment

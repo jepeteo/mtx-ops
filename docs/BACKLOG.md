@@ -57,6 +57,7 @@ Status note (2026-03-01): notes/decisions/handovers baseline is implemented via 
 Status note (2026-03-01): attachments baseline is implemented with `POST /api/attachments/presign` and `POST /api/attachments/link`, plus Client Card upload/list UI.
 Status note (2026-03-01): attachment permissions are hardened with Admin/Owner-only write access on presign/link endpoints and Member read-only upload UX.
 Status note (2026-03-01): broader entity-level attachment UX is implemented with upload/list sections on Project and Task pages.
+Status note (2026-03-01): unlink controls are implemented on Client/Project/Task attachment rows via `DELETE /api/attachments/links/:linkId`, with ActivityLog entries and orphan attachment cleanup.
 
 ### F1 — Upload
 ### F2 — Link to entities

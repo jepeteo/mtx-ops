@@ -5,6 +5,7 @@ import { CreateTaskForm } from "@/components/tasks/CreateTaskForm";
 import { TaskRowActions } from "@/components/tasks/TaskRowActions";
 import { AddTaskDependencyForm } from "@/components/tasks/AddTaskDependencyForm";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
+import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 type Search = {
@@ -249,6 +250,7 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 											<div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
 												{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
 											</div>
+											{canManageAttachments ? <AttachmentLinkActions linkId={link.id} /> : null}
 											{fileUrl ? (
 												<a href={fileUrl} target="_blank" rel="noreferrer">
 													Open attachment
