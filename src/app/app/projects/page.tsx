@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
+import { ProjectRowActions } from "@/components/projects/ProjectRowActions";
 
 export default async function ProjectsPage() {
 	const session = await requireSession();
@@ -51,6 +52,7 @@ export default async function ProjectsPage() {
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Client</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
 							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Tasks</th>
+							<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -63,11 +65,14 @@ export default async function ProjectsPage() {
 								</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{project.status}</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{project._count.tasks}</td>
+								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", minWidth: 300 }}>
+									<ProjectRowActions projectId={project.id} status={project.status} />
+								</td>
 							</tr>
 						))}
 						{projects.length === 0 ? (
 							<tr>
-								<td colSpan={5} style={{ padding: 14, color: "#666" }}>
+								<td colSpan={6} style={{ padding: 14, color: "#666" }}>
 									No projects yet.
 								</td>
 							</tr>

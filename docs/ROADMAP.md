@@ -40,8 +40,8 @@
 ### Current status (2026-03-01)
 - Baseline project model is in place with workspace-scoped unique `keyPrefix` and client ownership.
 - API baseline now includes `GET/POST /api/clients/:id/projects` and `GET/POST /api/projects/:id/tasks`.
-- `/app/projects` now supports project creation and listing; `/app/tasks` now supports optional project linkage.
-- Pending in Phase 3: milestones, kanban view, task dependencies, and project/task edit workflows.
+- `/app/projects` now supports project create/list/status update/delete; `/app/tasks` supports optional project linkage.
+- Pending in Phase 3: milestones, kanban view, task dependencies, and richer project/task edit workflows.
 
 ## Phase 4 — Knowledge & Continuity
 - Notes
