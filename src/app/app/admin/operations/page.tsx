@@ -149,6 +149,8 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
     return `/app/admin/operations?${params.toString()}`;
   };
 
+  const clearStatusHref = buildFilterHref(selectedRange, selectedView);
+
   const tabClass = (active: boolean) =>
     `rounded-md border px-3 py-1 ${active ? "border-foreground bg-secondary" : "border-border"}`;
 
@@ -171,13 +173,19 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
 
       {cleanupRun === "ok" ? (
         <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          Cleanup completed: scanned {cleanupScanned}, deleted {cleanupDeleted}, failed {cleanupFailed}.
+          Cleanup completed: scanned {cleanupScanned}, deleted {cleanupDeleted}, failed {cleanupFailed}.{" "}
+          <Link href={clearStatusHref} className="underline underline-offset-2">
+            Clear status
+          </Link>
         </div>
       ) : null}
 
       {cleanupRun === "error" ? (
         <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
-          Cleanup failed: {cleanupMessage}
+          Cleanup failed: {cleanupMessage}.{" "}
+          <Link href={clearStatusHref} className="underline underline-offset-2">
+            Clear status
+          </Link>
         </div>
       ) : null}
 

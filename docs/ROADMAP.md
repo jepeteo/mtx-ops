@@ -101,3 +101,4 @@
 - Admin operations now also shows a latest cleanup run summary timestamp sourced from the most recent `attachment.cleanup` event.
 - Admin operations includes an admin-only manual trigger action to run attachment cleanup on demand.
 - Manual cleanup results now persist as a status banner on operations page after refresh/navigation.
+- Status banner now includes a clear action that keeps current range/view filters.

@@ -57,3 +57,4 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Admin operations latest cleanup summary (implemented)
 - Admin operations manual cleanup trigger (implemented)
 - Admin operations persistent result banner (implemented for manual runs)
+- Admin operations clear-status action (implemented)

@@ -83,6 +83,7 @@ Status note (2026-03-01): admin operations page now includes summary counters fo
 Status note (2026-03-01): admin operations page now includes a latest cleanup run summary from the newest `attachment.cleanup` event.
 Status note (2026-03-01): admin operations page now includes an admin-only manual trigger to run attachment cleanup on demand.
 Status note (2026-03-01): manual cleanup outcome is persisted as a result banner on operations page after refresh/navigation.
+Status note (2026-03-01): result banner now includes a clear action that preserves range/view filters.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders
