@@ -6,11 +6,10 @@ import {
   buildRenewalDedupeKey,
   buildTaskDueDedupeKey,
   daysUntil,
+  INACTIVITY_THRESHOLD_DAYS,
   parseReminderRules,
   TASK_DUE_REMINDER_DAYS,
 } from "@/lib/notifications/renewals";
-
-const INACTIVITY_DAYS = 30;
 
 /**
  * Called by Vercel cron every 6 hours (see vercel.json).
@@ -171,25 +170,138 @@ export async function GET(req: Request) {
     });
 
     const clientIds = clients.map((client) => client.id);
-    const recentClientActivity =
-      clientIds.length > 0
-        ? await db.activityLog.findMany({
-            where: {
-              entityType: "Client",
-              entityId: { in: clientIds },
-            },
-            orderBy: { createdAt: "desc" },
-            select: {
-              entityId: true,
-              createdAt: true,
-            },
-          })
-        : [];
-
     const latestByClient = new Map<string, Date>();
-    for (const activity of recentClientActivity) {
-      if (!latestByClient.has(activity.entityId)) {
-        latestByClient.set(activity.entityId, activity.createdAt);
+    for (const client of clients) {
+      latestByClient.set(client.id, client.updatedAt);
+    }
+
+    const mergeLatestDate = (clientId: string, candidate: Date | null | undefined) => {
+      if (!candidate) return;
+      const existing = latestByClient.get(clientId);
+      if (!existing || candidate > existing) {
+        latestByClient.set(clientId, candidate);
+      }
+    };
+
+    if (clientIds.length > 0) {
+      const [
+        clientActivity,
+        serviceActivity,
+        projectActivity,
+        taskActivity,
+        assetActivity,
+        vaultActivity,
+        noteActivity,
+        decisionActivity,
+        handoverActivity,
+        attachmentLinkActivity,
+      ] = await Promise.all([
+        db.activityLog.groupBy({
+          by: ["entityId"],
+          where: {
+            entityType: "Client",
+            entityId: { in: clientIds },
+          },
+          _max: { createdAt: true },
+        }),
+        db.service.groupBy({
+          by: ["clientId"],
+          where: { clientId: { in: clientIds } },
+          _max: { updatedAt: true },
+        }),
+        db.project.groupBy({
+          by: ["clientId"],
+          where: { clientId: { in: clientIds } },
+          _max: { updatedAt: true },
+        }),
+        db.task.groupBy({
+          by: ["clientId"],
+          where: { clientId: { in: clientIds } },
+          _max: { updatedAt: true },
+        }),
+        db.assetLink.groupBy({
+          by: ["clientId"],
+          where: { clientId: { in: clientIds } },
+          _max: { updatedAt: true },
+        }),
+        db.vaultPointer.groupBy({
+          by: ["clientId"],
+          where: { clientId: { in: clientIds } },
+          _max: { updatedAt: true },
+        }),
+        db.note.groupBy({
+          by: ["entityId"],
+          where: {
+            entityType: "Client",
+            entityId: { in: clientIds },
+          },
+          _max: { updatedAt: true },
+        }),
+        db.decision.groupBy({
+          by: ["entityId"],
+          where: {
+            entityType: "Client",
+            entityId: { in: clientIds },
+          },
+          _max: { updatedAt: true },
+        }),
+        db.handover.groupBy({
+          by: ["entityId"],
+          where: {
+            entityType: "Client",
+            entityId: { in: clientIds },
+          },
+          _max: { updatedAt: true },
+        }),
+        db.attachmentLink.groupBy({
+          by: ["entityId"],
+          where: {
+            entityType: "Client",
+            entityId: { in: clientIds },
+          },
+          _max: { createdAt: true },
+        }),
+      ]);
+
+      for (const row of clientActivity) {
+        mergeLatestDate(row.entityId, row._max.createdAt);
+      }
+
+      for (const row of serviceActivity) {
+        mergeLatestDate(row.clientId, row._max.updatedAt);
+      }
+
+      for (const row of projectActivity) {
+        mergeLatestDate(row.clientId, row._max.updatedAt);
+      }
+
+      for (const row of taskActivity) {
+        if (!row.clientId) continue;
+        mergeLatestDate(row.clientId, row._max.updatedAt);
+      }
+
+      for (const row of assetActivity) {
+        mergeLatestDate(row.clientId, row._max.updatedAt);
+      }
+
+      for (const row of vaultActivity) {
+        mergeLatestDate(row.clientId, row._max.updatedAt);
+      }
+
+      for (const row of noteActivity) {
+        mergeLatestDate(row.entityId, row._max.updatedAt);
+      }
+
+      for (const row of decisionActivity) {
+        mergeLatestDate(row.entityId, row._max.updatedAt);
+      }
+
+      for (const row of handoverActivity) {
+        mergeLatestDate(row.entityId, row._max.updatedAt);
+      }
+
+      for (const row of attachmentLinkActivity) {
+        mergeLatestDate(row.entityId, row._max.createdAt);
       }
     }
 
@@ -197,9 +309,9 @@ export async function GET(req: Request) {
       const lastActivityAt = latestByClient.get(client.id) ?? client.updatedAt;
       const inactiveDays = daysUntil(lastActivityAt, now);
 
-      if (inactiveDays < INACTIVITY_DAYS) continue;
+      if (inactiveDays < INACTIVITY_THRESHOLD_DAYS) continue;
 
-      const dedupeKey = buildInactivityDedupeKey(client.id, now);
+      const dedupeKey = buildInactivityDedupeKey(client.id, inactiveDays);
 
       newNotifications.push({
         workspaceId: client.workspaceId,
@@ -215,6 +327,7 @@ export async function GET(req: Request) {
           clientId: client.id,
           clientName: client.name,
           inactiveDays,
+          lastActivityAt: lastActivityAt.toISOString(),
         },
       });
     }

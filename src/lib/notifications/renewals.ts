@@ -1,5 +1,7 @@
 const DEFAULT_RULES = [60, 30, 14, 7];
 export const TASK_DUE_REMINDER_DAYS = [7, 3, 1, 0] as const;
+export const INACTIVITY_THRESHOLD_DAYS = 30;
+export const INACTIVITY_REMINDER_INTERVAL_DAYS = 7;
 
 export function toUtcDayStart(value: Date) {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
@@ -23,9 +25,13 @@ export function buildRenewalDedupeKey(serviceId: string, remainingDays: number, 
   return `renewal:${serviceId}:${remainingDays}:${dueAtDay}`;
 }
 
-export function buildInactivityDedupeKey(clientId: string, now: Date) {
-  const dedupeDay = toUtcDayStart(now).toISOString().slice(0, 10);
-  return `inactivity:${clientId}:${dedupeDay}`;
+export function buildInactivityDedupeKey(clientId: string, inactiveDays: number) {
+  const normalizedInactiveDays = Math.max(0, Math.trunc(inactiveDays));
+  const bucket =
+    normalizedInactiveDays < INACTIVITY_THRESHOLD_DAYS
+      ? 0
+      : Math.floor((normalizedInactiveDays - INACTIVITY_THRESHOLD_DAYS) / INACTIVITY_REMINDER_INTERVAL_DAYS);
+  return `inactivity:${clientId}:bucket-${bucket}`;
 }
 
 export function buildTaskDueDedupeKey(taskId: string, remainingDays: number, dueAt: Date) {

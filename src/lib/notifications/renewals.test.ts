@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  INACTIVITY_REMINDER_INTERVAL_DAYS,
+  INACTIVITY_THRESHOLD_DAYS,
   TASK_DUE_REMINDER_DAYS,
   buildInactivityDedupeKey,
   buildRenewalDedupeKey,
@@ -33,8 +35,12 @@ describe("notification renewal helpers", () => {
   it("builds deterministic dedupe keys", () => {
     const renewalDate = new Date("2026-04-15T09:30:00.000Z");
     expect(buildRenewalDedupeKey("svc_1", 14, renewalDate)).toBe("renewal:svc_1:14:2026-04-15");
-    expect(buildInactivityDedupeKey("client_1", new Date("2026-04-15T22:00:00.000Z"))).toBe(
-      "inactivity:client_1:2026-04-15",
+    expect(buildInactivityDedupeKey("client_1", INACTIVITY_THRESHOLD_DAYS)).toBe("inactivity:client_1:bucket-0");
+    expect(buildInactivityDedupeKey("client_1", INACTIVITY_THRESHOLD_DAYS + INACTIVITY_REMINDER_INTERVAL_DAYS - 1)).toBe(
+      "inactivity:client_1:bucket-0",
+    );
+    expect(buildInactivityDedupeKey("client_1", INACTIVITY_THRESHOLD_DAYS + INACTIVITY_REMINDER_INTERVAL_DAYS)).toBe(
+      "inactivity:client_1:bucket-1",
     );
     expect(buildTaskDueDedupeKey("task_1", 3, renewalDate)).toBe("task:task_1:due-3:2026-04-15");
     expect(buildTaskDueDedupeKey("task_1", -1, renewalDate)).toBe("task:task_1:overdue:2026-04-15");

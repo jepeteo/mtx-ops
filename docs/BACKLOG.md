@@ -67,6 +67,7 @@ Status note (2026-03-01): vault pointer CRUD baseline is implemented (`POST /api
 
 ## Epic H — Search & Quality
 Status note (2026-03-01): global search baseline is implemented with `/app/search` + `GET /api/search` scoped to workspace and grouped for clients/projects/tasks/notes. App shell nav and command palette include Search shortcuts.
+Status note (2026-03-01): inactivity reminder refinement is implemented in cron with expanded client activity signals (entity updates + client-linked notes/decisions/handovers/attachments + client activity logs) and weekly dedupe buckets after threshold.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders
