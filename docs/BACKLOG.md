@@ -54,6 +54,8 @@ Status note (2026-03-01): notes/decisions/handovers baseline is implemented via 
 ### E4 — Client timeline
 
 ## Epic F — Attachments
+Status note (2026-03-01): attachments baseline is implemented with `POST /api/attachments/presign` and `POST /api/attachments/link`, plus Client Card upload/list UI.
+
 ### F1 — Upload
 ### F2 — Link to entities
 

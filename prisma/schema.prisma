@@ -49,6 +49,11 @@ enum HandoverStatus {
   ACKED
 }
 
+enum AttachmentStatus {
+  PENDING
+  READY
+}
+
 enum ServiceType {
   DOMAIN
   HOSTING
@@ -89,6 +94,8 @@ model Workspace {
   notes       Note[]
   decisions   Decision[]
   handovers   Handover[]
+  attachments Attachment[]
+  attachmentLinks AttachmentLink[]
   notifications Notification[]
   activityLog ActivityLog[]
 }
@@ -253,6 +260,44 @@ model Handover {
 
   @@index([workspaceId, status, createdAt])
   @@index([workspaceId, entityType, entityId, createdAt])
+}
+
+model Attachment {
+  id          String           @id @default(uuid())
+  workspaceId String
+  createdById String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  storageKey  String
+  status      AttachmentStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  links     AttachmentLink[]
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, status, createdAt])
+  @@index([workspaceId, storageKey])
+}
+
+model AttachmentLink {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  attachmentId String
+  entityType   String
+  entityId     String
+  label        String?
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@unique([attachmentId, entityType, entityId])
+  @@index([workspaceId, entityType, entityId, createdAt])
+  @@index([workspaceId, attachmentId])
 }
 
 model Service {

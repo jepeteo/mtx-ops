@@ -66,6 +66,11 @@
 - Attach to entities
 - Permissions
 
+### Current status (2026-03-01)
+- Attachments baseline is implemented with `POST /api/attachments/presign` and `POST /api/attachments/link` using S3-compatible presigned upload URLs.
+- Client Card now supports upload and listing of client-linked attachments.
+- Pending in Phase 5: broader entity-level attachment UX beyond Client Card and finer-grained attachment permissions.
+
 ## Phase 6 — Vaultwarden
 - Vault pointers CRUD
 - Reveal flow (fails if vault unreachable)

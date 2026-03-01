@@ -1,6 +1,6 @@
 # Build plan (phased)
 
-Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guards, audit log helper, seeded workspace owner, and admin user lifecycle controls). Phase 2 due-date notifications are generated from baseline workspace tasks. Phase 3 core baseline is now delivered with projects CRUD, milestones baseline, task dependencies, and list/kanban task views. Phase 4 baseline now includes notes, decisions, and handovers with acknowledgement flow.
+Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guards, audit log helper, seeded workspace owner, and admin user lifecycle controls). Phase 2 due-date notifications are generated from baseline workspace tasks. Phase 3 core baseline is now delivered with projects CRUD, milestones baseline, task dependencies, and list/kanban task views. Phase 4 baseline includes notes, decisions, and handovers with acknowledgement flow. Phase 5 baseline now includes attachment presign/link APIs and Client Card upload/list UI.
 
 ## Phase 0 — Foundations
 - Workspace model (single workspace now)

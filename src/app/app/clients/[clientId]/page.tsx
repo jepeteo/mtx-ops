@@ -10,6 +10,8 @@ import { CreateNoteForm } from "@/components/notes/CreateNoteForm";
 import { CreateDecisionForm } from "@/components/decisions/CreateDecisionForm";
 import { CreateHandoverForm } from "@/components/handovers/CreateHandoverForm";
 import { AckHandoverButton } from "@/components/handovers/AckHandoverButton";
+import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
+import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -68,6 +70,19 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
   });
 
   const authorMap = new Map(activeUsers.map((user) => [user.id, user.name || user.email]));
+
+  const attachmentLinks = await db.attachmentLink.findMany({
+    where: {
+      workspaceId: session.workspaceId,
+      entityType: "Client",
+      entityId: client.id,
+    },
+    include: {
+      attachment: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
 
   const timeline = [
     ...notes.map((note) => ({
@@ -276,6 +291,30 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
           </div>
         ))}
         {timeline.length === 0 ? <div style={{ color: "#666" }}>No timeline activity yet.</div> : null}
+      </div>
+
+      <h3>Attachments</h3>
+      <UploadAttachmentForm entityType="Client" entityId={client.id} />
+      <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+        {attachmentLinks.map((link) => {
+          const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+          return (
+            <div key={link.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 600 }}>{link.label || link.attachment.fileName}</div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                {link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
+              </div>
+              {fileUrl ? (
+                <a href={fileUrl} target="_blank" rel="noreferrer">
+                  Open attachment
+                </a>
+              ) : (
+                <span style={{ color: "#666" }}>Storage public URL not configured</span>
+              )}
+            </div>
+          );
+        })}
+        {attachmentLinks.length === 0 ? <div style={{ color: "#666" }}>No attachments yet.</div> : null}
       </div>
     </div>
   );
