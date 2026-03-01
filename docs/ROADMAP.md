@@ -71,7 +71,8 @@
 - Attachments baseline is implemented with `POST /api/attachments/presign` and `POST /api/attachments/link` using S3-compatible presigned upload URLs.
 - Client Card now supports upload and listing of client-linked attachments.
 - Attachment write permissions are now hardened: `presign` and `link` APIs require `ADMIN`/`OWNER`, and Member UI is read-only for uploads.
-- Pending in Phase 5: broader entity-level attachment UX beyond Client Card.
+- Project and Task pages now include entity-level attachment upload/list sections using the same role-aware permissions as Client Card.
+- Pending in Phase 5: no major gaps; continue UX refinement as needed.
 
 ## Phase 6 — Vaultwarden
 - Vault pointers CRUD

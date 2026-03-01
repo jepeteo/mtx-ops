@@ -4,6 +4,8 @@ import { db } from "@/lib/db/db";
 import { CreateTaskForm } from "@/components/tasks/CreateTaskForm";
 import { TaskRowActions } from "@/components/tasks/TaskRowActions";
 import { AddTaskDependencyForm } from "@/components/tasks/AddTaskDependencyForm";
+import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
+import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 type Search = {
 	view?: string;
@@ -13,6 +15,7 @@ const KANBAN_STATUSES = ["TODO", "IN_PROGRESS", "BLOCKED", "DONE"] as const;
 
 export default async function TasksPage({ searchParams }: { searchParams?: Promise<Search> }) {
 	const session = await requireSession();
+	const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
 	const resolvedSearch = (await searchParams) ?? {};
 	const view = resolvedSearch.view === "kanban" ? "kanban" : "list";
 
@@ -64,6 +67,31 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 			take: 200,
 		}),
 	]);
+
+	const taskIds = tasks.map((task) => task.id);
+	const taskAttachmentLinks =
+		taskIds.length > 0
+			? await db.attachmentLink.findMany({
+					where: {
+						workspaceId: session.workspaceId,
+						entityType: "Task",
+						entityId: { in: taskIds },
+					},
+					include: { attachment: true },
+					orderBy: { createdAt: "desc" },
+					take: 500,
+			  })
+			: [];
+
+	const taskAttachmentMap = new Map<string, typeof taskAttachmentLinks>();
+	for (const link of taskAttachmentLinks) {
+		const existing = taskAttachmentMap.get(link.entityId);
+		if (existing) {
+			existing.push(link);
+		} else {
+			taskAttachmentMap.set(link.entityId, [link]);
+		}
+	}
 
 	return (
 		<div style={{ display: "grid", gap: 18 }}>
@@ -198,6 +226,45 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 					})}
 				</div>
 			)}
+
+			<section style={{ display: "grid", gap: 12 }}>
+				<h3 style={{ margin: 0 }}>Task attachments</h3>
+				{tasks.length === 0 ? <div style={{ color: "#666" }}>Create a task to attach files.</div> : null}
+				{tasks.map((task) => {
+					const links = taskAttachmentMap.get(task.id) ?? [];
+					return (
+						<div key={task.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
+							<div style={{ fontWeight: 600, marginBottom: 8 }}>{task.title}</div>
+							{canManageAttachments ? (
+								<UploadAttachmentForm entityType="Task" entityId={task.id} />
+							) : (
+								<div style={{ color: "#666", marginBottom: 8 }}>Only Admin/Owner roles can upload and link attachments.</div>
+							)}
+							<div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+								{links.slice(0, 20).map((link) => {
+									const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+									return (
+										<div key={link.id} style={{ border: "1px solid #f1f1f1", borderRadius: 10, padding: 10 }}>
+											<div style={{ fontWeight: 600 }}>{link.label || link.attachment.fileName}</div>
+											<div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+												{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
+											</div>
+											{fileUrl ? (
+												<a href={fileUrl} target="_blank" rel="noreferrer">
+													Open attachment
+												</a>
+											) : (
+												<span style={{ color: "#666" }}>Storage public URL not configured</span>
+											)}
+										</div>
+									);
+								})}
+								{links.length === 0 ? <div style={{ color: "#666" }}>No task attachments yet.</div> : null}
+							</div>
+						</div>
+					);
+				})}
+			</section>
 		</div>
 	);
 }

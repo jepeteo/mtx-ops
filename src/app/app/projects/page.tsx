@@ -5,9 +5,12 @@ import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
 import { ProjectRowActions } from "@/components/projects/ProjectRowActions";
 import { CreateMilestoneForm } from "@/components/projects/CreateMilestoneForm";
 import { MilestoneRowActions } from "@/components/projects/MilestoneRowActions";
+import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
+import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 export default async function ProjectsPage() {
 	const session = await requireSession();
+	const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
 
 	const [projects, clients, milestones] = await Promise.all([
 		db.project.findMany({
@@ -49,6 +52,31 @@ export default async function ProjectsPage() {
 			take: 200,
 		}),
 	]);
+
+	const projectIds = projects.map((project) => project.id);
+	const projectAttachmentLinks =
+		projectIds.length > 0
+			? await db.attachmentLink.findMany({
+					where: {
+						workspaceId: session.workspaceId,
+						entityType: "Project",
+						entityId: { in: projectIds },
+					},
+					include: { attachment: true },
+					orderBy: { createdAt: "desc" },
+					take: 500,
+			  })
+			: [];
+
+	const attachmentMap = new Map<string, typeof projectAttachmentLinks>();
+	for (const link of projectAttachmentLinks) {
+		const existing = attachmentMap.get(link.entityId);
+		if (existing) {
+			existing.push(link);
+		} else {
+			attachmentMap.set(link.entityId, [link]);
+		}
+	}
 
 	return (
 		<div style={{ display: "grid", gap: 18 }}>
@@ -146,6 +174,47 @@ export default async function ProjectsPage() {
 					</tbody>
 				</table>
 			</div>
+
+			<section style={{ display: "grid", gap: 12 }}>
+				<h3 style={{ margin: 0 }}>Project attachments</h3>
+				{projects.length === 0 ? <div style={{ color: "#666" }}>Create a project to attach files.</div> : null}
+				{projects.map((project) => {
+					const links = attachmentMap.get(project.id) ?? [];
+					return (
+						<div key={project.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
+							<div style={{ fontWeight: 600, marginBottom: 8 }}>
+								{project.keyPrefix} · {project.name}
+							</div>
+							{canManageAttachments ? (
+								<UploadAttachmentForm entityType="Project" entityId={project.id} />
+							) : (
+								<div style={{ color: "#666", marginBottom: 8 }}>Only Admin/Owner roles can upload and link attachments.</div>
+							)}
+							<div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+								{links.slice(0, 20).map((link) => {
+									const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+									return (
+										<div key={link.id} style={{ border: "1px solid #f1f1f1", borderRadius: 10, padding: 10 }}>
+											<div style={{ fontWeight: 600 }}>{link.label || link.attachment.fileName}</div>
+											<div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+												{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
+											</div>
+											{fileUrl ? (
+												<a href={fileUrl} target="_blank" rel="noreferrer">
+													Open attachment
+												</a>
+											) : (
+												<span style={{ color: "#666" }}>Storage public URL not configured</span>
+											)}
+										</div>
+									);
+								})}
+								{links.length === 0 ? <div style={{ color: "#666" }}>No project attachments yet.</div> : null}
+							</div>
+						</div>
+					);
+				})}
+			</section>
 		</div>
 	);
 }
