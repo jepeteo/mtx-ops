@@ -50,3 +50,4 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Global search + command palette (expanded coverage for clients/projects/tasks/notes/providers/domains-links and richer shortcuts)
 - Inactivity notifications (refined: broader activity sources + weekly reminder buckets)
 - Export (workspace JSON baseline implemented via admin-only API)
+- Admin operations monitoring (implemented for attachment cleanup visibility)

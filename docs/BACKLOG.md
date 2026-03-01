@@ -76,6 +76,7 @@ Status note (2026-03-01): global search baseline is implemented with `/app/searc
 Status note (2026-03-01): global search is expanded to provider/domain-link coverage (services and asset links), and command palette shortcuts now include dashboard/projects navigation.
 Status note (2026-03-01): inactivity reminder refinement is implemented in cron with expanded client activity signals (entity updates + client-linked notes/decisions/handovers/attachments + client activity logs) and weekly dedupe buckets after threshold.
 Status note (2026-03-01): workspace export baseline is implemented via admin-only `GET /api/export/workspace`, returning downloadable deterministic JSON and writing `workspace.export` activity logs.
+Status note (2026-03-01): admin operations monitoring page is implemented at `/app/admin/operations` for attachment cleanup and storage-delete failure visibility.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders
