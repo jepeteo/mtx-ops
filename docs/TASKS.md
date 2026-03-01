@@ -41,7 +41,7 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 ## Phase 6 — Vaultwarden
 - Vault pointers CRUD
 - Reveal flow + audit log
-- Clear UX for vault unreachable
+- Clear UX for vault unreachable (implemented with explicit errors + masked reveal/copy actions)
 
 ## Phase 7 — Polish
 - Global search + command palette (expanded coverage for clients/projects/tasks/notes/providers/domains-links and richer shortcuts)

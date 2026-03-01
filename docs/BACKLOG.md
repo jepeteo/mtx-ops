@@ -61,6 +61,7 @@ Status note (2026-03-01): attachments baseline is implemented with `POST /api/at
 
 ## Epic G — Vaultwarden
 Status note (2026-03-01): vault pointer CRUD baseline is implemented (`POST /api/vault/pointers`, `PATCH/DELETE /api/vault/pointers/:id`) with Client Card create/update/delete/reveal controls and audit logging for reveal actions.
+Status note (2026-03-01): reveal UX hardening is implemented with explicit upstream-unavailable messaging and masked/copy secret affordances in Client Card pointer actions.
 
 ### G1 — Vault pointer CRUD
 ### G2 — Reveal secret + audit

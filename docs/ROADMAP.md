@@ -81,7 +81,7 @@
 - Vault pointer CRUD baseline is implemented with `POST /api/vault/pointers` and `PATCH/DELETE /api/vault/pointers/:id`.
 - Client Card now includes create/update/delete pointer controls and reveal actions wired to `POST /api/vault/reveal`.
 - Reveal and pointer mutations write ActivityLog entries; reveal metadata excludes secret value.
-- Pending in Phase 6: additional UX hardening around reveal errors and optional masking/copy affordances.
+- Reveal UX hardening is implemented: explicit vault-unavailable error messaging plus masked reveal and copy affordances on Client Card.
 
 ## Phase 7 — Search & Polish
 - Global search is implemented (`/app/search`, `GET /api/search`) for clients/projects/tasks/notes/providers/domains-links.
