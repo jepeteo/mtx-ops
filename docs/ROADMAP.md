@@ -98,3 +98,4 @@
 - Admin operations page now includes lightweight range/view filters (`24h/7d/30d/all`, `all/cleanup/failures`) for faster incident triage.
 - Failure rows in admin operations now include direct entity links (client/project/task context) when metadata is available.
 - Admin operations now surfaces top-level counters (cleanup events, failures, failure rate) for at-a-glance health in the selected range.
+- Admin operations now also shows a latest cleanup run summary timestamp sourced from the most recent `attachment.cleanup` event.

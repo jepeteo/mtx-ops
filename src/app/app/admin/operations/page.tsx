@@ -59,17 +59,36 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
   const rangeHours = RANGE_HOURS[selectedRange];
   const since = rangeHours ? new Date(Date.now() - rangeHours * 60 * 60 * 1000) : null;
 
-  const logs = await db.activityLog.findMany({
-    where: {
-      workspaceId: session.workspaceId,
-      action: {
-        in: ["attachment.cleanup", "attachment.unlink"],
+  const [latestCleanupLog, logs] = await Promise.all([
+    db.activityLog.findFirst({
+      where: {
+        workspaceId: session.workspaceId,
+        action: "attachment.cleanup",
       },
-      ...(since ? { createdAt: { gte: since } } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 300,
-  });
+      orderBy: { createdAt: "desc" },
+    }),
+    db.activityLog.findMany({
+      where: {
+        workspaceId: session.workspaceId,
+        action: {
+          in: ["attachment.cleanup", "attachment.unlink"],
+        },
+        ...(since ? { createdAt: { gte: since } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: 300,
+    }),
+  ]);
+
+  const latestCleanupMeta = asMetadataMap(latestCleanupLog?.metadata);
+  const latestCleanup = latestCleanupLog
+    ? {
+        createdAt: latestCleanupLog.createdAt,
+        actorId: latestCleanupLog.actorId,
+        attachmentId: latestCleanupLog.entityId,
+        fileName: getString(latestCleanupMeta.fileName) ?? "—",
+      }
+    : null;
 
   const cleanupEvents = logs
     .filter((log) => log.action === "attachment.cleanup")
@@ -174,7 +193,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle>Cleanup Events</CardTitle>
@@ -200,6 +219,22 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           <CardContent>
             <div className="text-2xl font-semibold">{failureRate}%</div>
             <div className="text-xs text-muted-foreground">From {unlinkEventsInRange} unlink events</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Last Cleanup Run</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {latestCleanup ? (
+              <>
+                <div className="text-sm font-medium">{new Date(latestCleanup.createdAt).toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">{latestCleanup.fileName}</div>
+                <div className="text-xs text-muted-foreground font-mono">{latestCleanup.actorId}</div>
+              </>
+            ) : (
+              <div className="text-xs text-muted-foreground">No cleanup activity recorded yet.</div>
+            )}
           </CardContent>
         </Card>
       </div>
