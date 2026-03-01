@@ -35,6 +35,9 @@ export default async function AdminUsersPage() {
 				<Link className="rounded-md border border-border px-3 py-1" href="/app/admin/operations">
 					Operations
 				</Link>
+				<Link className="rounded-md border border-border px-3 py-1" href="/app/admin/activity">
+					Activity
+				</Link>
 			</div>
 
 			<CreateUserForm />

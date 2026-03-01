@@ -4,6 +4,7 @@ This backlog is written as **epics → user stories → acceptance criteria**.
 
 ## Epic A — Foundations
 Status note (2026-02-28): baseline auth/session/RBAC guards/audit helper are implemented; manual user create/list and role/status/password reset controls are available for admin users.
+Status note (2026-03-01): broader admin workflow coverage is now implemented with `/app/admin/activity` for role-gated audit exploration.
 
 ### A1 — Login/Logout
 - As a user, I can log in with email+password.
@@ -25,6 +26,8 @@ Status note (2026-02-28): baseline auth/session/RBAC guards/audit helper are imp
 
 ## Epic B — Clients & Intelligence
 Status note (2026-02-28): client CRUD baseline is implemented (list/create/view/edit/delete) with workspace-scoped APIs and mutation audit logs.
+Status note (2026-03-01): provider catalog is implemented at `/app/providers` with grouped provider summaries and quick links to Client Cards.
+Status note (2026-03-01): client intelligence sections now include asset/link create-delete APIs (`POST /api/clients/:id/asset-links`, `DELETE /api/asset-links/:id`) with ActivityLog entries.
 
 ### B1 — Client CRUD
 ### B2 — Client Card overview
@@ -47,6 +50,7 @@ Status note (2026-03-01): projects baseline is implemented with keyPrefix unique
 
 ## Epic E — Knowledge & Continuity
 Status note (2026-03-01): notes/decisions/handovers baseline is implemented via `POST /api/notes`, `POST /api/decisions`, `POST /api/handovers`, and `POST /api/handovers/:id/ack`, with Client Card capture/list UI, acknowledgement controls, and a unified chronological client timeline.
+Status note (2026-03-01): Client timeline UX polish is implemented with timeline type filters and configurable limits on Client Card.
 
 ### E1 — Notes
 ### E2 — Decisions (ADR-lite)

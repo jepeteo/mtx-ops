@@ -1,6 +1,6 @@
 # Build plan (phased)
 
-Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guards, audit log helper, seeded workspace owner, and admin user lifecycle controls). Phase 2 due-date notifications are generated from baseline workspace tasks. Phase 3 core baseline is now delivered with projects CRUD, milestones baseline, task dependencies, and list/kanban task views. Phase 4 baseline includes notes, decisions, and handovers with acknowledgement flow. Phase 5 baseline includes attachment presign/link APIs and Client Card upload/list UI. Phase 6 baseline includes vault pointer CRUD and reveal controls with audit logging.
+Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guards, audit log helper, seeded workspace owner, and admin user lifecycle controls), with broader admin workflow coverage now implemented via `/app/admin/activity`. Phase 1 provider/intelligence gaps are now closed with `/app/providers` catalog and Client Card asset-link management + renewal quick stats. Phase 2 due-date notifications are generated from baseline workspace tasks. Phase 3 core baseline is now delivered with projects CRUD, milestones baseline, task dependencies, and list/kanban task views. Phase 4 baseline includes notes, decisions, and handovers with acknowledgement flow, plus timeline filters/limits polish. Phase 5 baseline includes attachment presign/link APIs and Client Card upload/list UI. Phase 6 baseline includes vault pointer CRUD and reveal controls with audit logging.
 
 ## Phase 0 — Foundations
 - Workspace model (single workspace now)
@@ -12,8 +12,8 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 ## Phase 1 — Clients & Intelligence
 - Clients CRUD
 - Client Card
-- Assets/links
-- Provider list
+- Assets/links (implemented with create/delete + audit logging)
+- Provider list (implemented via `/app/providers`)
 
 ## Phase 2 — Services & Renewals
 - Services CRUD
@@ -31,7 +31,7 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 - Notes
 - Decisions (ADR-lite)
 - Handovers with acknowledgement flow
-- Client timeline
+- Client timeline (implemented with type + limit filters)
 
 ## Phase 5 — Attachments
 - Upload to S3-compatible storage (Client/Project/Task surfaces)

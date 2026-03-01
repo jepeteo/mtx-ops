@@ -12,12 +12,20 @@ import { CreateNoteForm } from "@/components/notes/CreateNoteForm";
 import { CreateDecisionForm } from "@/components/decisions/CreateDecisionForm";
 import { CreateHandoverForm } from "@/components/handovers/CreateHandoverForm";
 import { AckHandoverButton } from "@/components/handovers/AckHandoverButton";
+import { CreateAssetLinkForm } from "@/components/clients/CreateAssetLinkForm";
+import { DeleteAssetLinkButton } from "@/components/clients/DeleteAssetLinkButton";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
-export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
+type Search = {
+  timelineType?: string;
+  timelineLimit?: string;
+};
+
+export default async function ClientCardPage({ params, searchParams }: { params: { clientId: string }; searchParams?: Promise<Search> }) {
   const session = await requireSession();
+  const resolvedSearch = (await searchParams) ?? {};
   const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
   const client = await db.client.findFirst({
     where: { id: params.clientId, workspaceId: session.workspaceId },
@@ -117,6 +125,46 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
     })),
   ].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 
+  const selectedTimelineType = ["all", "note", "decision", "handover"].includes(resolvedSearch.timelineType ?? "")
+    ? (resolvedSearch.timelineType as "all" | "note" | "decision" | "handover")
+    : "all";
+
+  const selectedTimelineLimit = [20, 50, 100].includes(Number(resolvedSearch.timelineLimit ?? ""))
+    ? Number(resolvedSearch.timelineLimit)
+    : 20;
+
+  const filteredTimeline = timeline.filter((item) => {
+    if (selectedTimelineType === "all") return true;
+    if (selectedTimelineType === "note") return item.type === "Note";
+    if (selectedTimelineType === "decision") return item.type === "Decision";
+    if (selectedTimelineType === "handover") return item.type === "Handover";
+    return true;
+  });
+
+  const visibleTimeline = filteredTimeline.slice(0, selectedTimelineLimit);
+
+  const now = Date.now();
+  const renewalDue30Count = client.services.filter((service) => {
+    if (service.status !== "ACTIVE" || !service.renewalDate) return false;
+    const diffDays = (new Date(service.renewalDate).getTime() - now) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 30;
+  }).length;
+
+  const renewalOverdueCount = client.services.filter((service) => {
+    if (service.status !== "ACTIVE" || !service.renewalDate) return false;
+    const diffDays = (new Date(service.renewalDate).getTime() - now) / (1000 * 60 * 60 * 24);
+    return diffDays < 0;
+  }).length;
+
+  const unknownServiceCount = client.services.filter((service) => service.status === "UNKNOWN").length;
+
+  function timelineHref(type: "all" | "note" | "decision" | "handover", limit: number) {
+    const params = new URLSearchParams();
+    params.set("timelineType", type);
+    params.set("timelineLimit", String(limit));
+    return `/app/clients/${client.id}?${params.toString()}`;
+  }
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -133,7 +181,10 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
         <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Quick stats</div>
           <div style={{ color: "#555" }}>
-            Services: {client.services.length} • Links: {client.assetLinks.length} • Vault pointers: {client.vaultPointers.length}
+            Services: {client.services.length} • Due in 30d: {renewalDue30Count} • Overdue: {renewalOverdueCount}
+          </div>
+          <div style={{ color: "#555" }}>
+            Unknown services: {unknownServiceCount} • Links: {client.assetLinks.length} • Vault pointers: {client.vaultPointers.length}
           </div>
         </div>
       </section>
@@ -203,10 +254,14 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
       </div>
 
       <h3>Assets & links</h3>
+      <CreateAssetLinkForm clientId={client.id} />
       <ul>
         {client.assetLinks.map((l) => (
           <li key={l.id}>
             <a href={l.url} target="_blank" rel="noreferrer">{l.label}</a> <span style={{ color: "#666" }}>({l.kind})</span>
+            <span style={{ marginLeft: 8 }}>
+              <DeleteAssetLinkButton linkId={l.id} />
+            </span>
           </li>
         ))}
         {client.assetLinks.length === 0 && <li style={{ color: "#666" }}>No links yet.</li>}
@@ -288,8 +343,20 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
       </div>
 
       <h3>Client timeline</h3>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <Link href={timelineHref("all", selectedTimelineLimit)}>All</Link>
+        <Link href={timelineHref("note", selectedTimelineLimit)}>Notes</Link>
+        <Link href={timelineHref("decision", selectedTimelineLimit)}>Decisions</Link>
+        <Link href={timelineHref("handover", selectedTimelineLimit)}>Handovers</Link>
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <span style={{ color: "#666" }}>Show:</span>
+        <Link href={timelineHref(selectedTimelineType, 20)}>20</Link>
+        <Link href={timelineHref(selectedTimelineType, 50)}>50</Link>
+        <Link href={timelineHref(selectedTimelineType, 100)}>100</Link>
+      </div>
       <div style={{ display: "grid", gap: 8 }}>
-        {timeline.map((item) => (
+        {visibleTimeline.map((item) => (
           <div key={item.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
               {item.type} · {authorMap.get(item.actorId) || "Unknown"} · {new Date(item.createdAt).toLocaleString()}
@@ -303,7 +370,10 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
             <div style={{ whiteSpace: "pre-wrap" }}>{item.body}</div>
           </div>
         ))}
-        {timeline.length === 0 ? <div style={{ color: "#666" }}>No timeline activity yet.</div> : null}
+        {visibleTimeline.length === 0 ? <div style={{ color: "#666" }}>No timeline activity yet.</div> : null}
+        {filteredTimeline.length > visibleTimeline.length ? (
+          <div style={{ color: "#666" }}>Showing {visibleTimeline.length} of {filteredTimeline.length} timeline events.</div>
+        ) : null}
       </div>
 
       <h3>Attachments</h3>

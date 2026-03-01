@@ -12,12 +12,14 @@ import { Button } from "@/components/ui/button";
 const nav = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/clients", label: "Clients", icon: Users },
+  { href: "/app/providers", label: "Providers", icon: Layers },
   { href: "/app/projects", label: "Projects", icon: Layers },
   { href: "/app/tasks", label: "Tasks", icon: KanbanSquare },
   { href: "/app/search", label: "Search", icon: Search },
   { href: "/app/notifications", label: "Notifications", icon: Bell },
   { href: "/app/admin/users", label: "Admin", icon: Settings },
   { href: "/app/admin/operations", label: "Admin Ops", icon: Settings },
+  { href: "/app/admin/activity", label: "Admin Activity", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -31,11 +33,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const actions = [
     { id: "go-dashboard", label: "Go to Dashboard", hint: "Workspace overview", onSelect: () => (window.location.href = "/app") },
     { id: "go-clients", label: "Go to Clients", hint: "Browse client cards", onSelect: () => (window.location.href = "/app/clients") },
+    { id: "go-providers", label: "Open Providers", hint: "Provider catalog across clients", onSelect: () => (window.location.href = "/app/providers") },
     { id: "go-projects", label: "Go to Projects", hint: "Projects and milestones", onSelect: () => (window.location.href = "/app/projects") },
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
     { id: "go-admin-ops", label: "Open Admin Operations", hint: "Cleanup activity and failures", onSelect: () => (window.location.href = "/app/admin/operations") },
+    { id: "go-admin-activity", label: "Open Admin Activity", hint: "Audit workflow and filters", onSelect: () => (window.location.href = "/app/admin/activity") },
     {
       id: "export-workspace",
       label: "Export Workspace JSON",

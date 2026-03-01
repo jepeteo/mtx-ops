@@ -6,19 +6,22 @@
 - ActivityLog (audit trail)
 - Basic AppShell + dashboard skeleton
 
-### Current status (2026-02-28)
+### Current status (2026-03-01)
 - Completed in foundation slice: env/db setup scripts, seed workspace + owner, login/logout/session cookie auth, `/app` protection, role guards, shared error envelope, auth activity logging, minimal protected dashboard, and admin user lifecycle controls (create/list/role/status/password reset) with active-account enforcement.
-- Pending in Phase 0: broader role-enforced admin workflows beyond user management.
+- Broader role-enforced admin workflows are now implemented via `/app/admin/activity` with scoped filters and audit browsing.
+- Pending in Phase 0: no major gaps; continue iteration via UX cleanup as needed.
 
 ## Phase 1 — Clients & Intelligence
 - Clients CRUD
 - Client Card (Overview + Assets/Links)
 - Providers catalog
 
-### Current status (2026-02-28)
+### Current status (2026-03-01)
 - Baseline client CRUD is available (list/create/view/edit/delete) with workspace scoping and audit logging on create/update/delete.
 - API baseline aligned for clients: `GET /api/clients`, `POST /api/clients`, `GET/PATCH/DELETE /api/clients/:id` with standard envelopes for JSON callers.
-- Pending in Phase 1: provider catalog and richer Client Card intelligence sections.
+- Providers catalog is now implemented at `/app/providers` with provider-level summaries and fast links to Client Cards.
+- Client Card intelligence is expanded with asset/link create/delete actions, renewal risk quick stats, and richer operational sections.
+- Pending in Phase 1: no major gaps; continue iteration via UX cleanup as needed.
 
 ## Phase 2 — Services & Renewals
 
@@ -60,7 +63,8 @@
 - Decisions baseline is implemented with `POST /api/decisions` and Client Card decision capture/list.
 - Handovers baseline is implemented with `POST /api/handovers` and `POST /api/handovers/:id/ack` plus Client Card handover capture/ack/list.
 - Unified Client timeline baseline is now available by merging notes, decisions, and handovers chronologically on Client Card.
-- Pending in Phase 4: additional timeline UX polish.
+- Timeline polish is now implemented with type filters (`all/note/decision/handover`) and configurable timeline limits on Client Card.
+- Pending in Phase 4: no major gaps; continue iteration via UX cleanup as needed.
 
 ## Phase 5 — Attachments
 - Upload + storage integration
