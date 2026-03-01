@@ -82,6 +82,7 @@ Status note (2026-03-01): failure rows in admin operations include direct entity
 Status note (2026-03-01): admin operations page now includes summary counters for cleanup events, failures, and failure rate within the selected range.
 Status note (2026-03-01): admin operations page now includes a latest cleanup run summary from the newest `attachment.cleanup` event.
 Status note (2026-03-01): admin operations page now includes an admin-only manual trigger to run attachment cleanup on demand.
+Status note (2026-03-01): manual cleanup outcome is persisted as a result banner on operations page after refresh/navigation.
 
 ### H1 — Global search
 ### H2 — Inactivity reminders

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type CleanupData = {
   scanned: number;
@@ -13,9 +13,30 @@ type CleanupData = {
 
 export function RunAttachmentCleanupButton() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CleanupData | null>(null);
+
+  function pushResultParams(input: { run: "ok" | "error"; message?: string; result?: CleanupData }) {
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.set("cleanupRun", input.run);
+
+    if (input.run === "ok" && input.result) {
+      params.set("cleanupScanned", String(input.result.scanned));
+      params.set("cleanupDeleted", String(input.result.deleted));
+      params.set("cleanupFailed", String(input.result.failed));
+      params.delete("cleanupMessage");
+    } else {
+      params.delete("cleanupScanned");
+      params.delete("cleanupDeleted");
+      params.delete("cleanupFailed");
+      params.set("cleanupMessage", input.message ?? "Cleanup run failed");
+    }
+
+    router.push(`/app/admin/operations?${params.toString()}`);
+    router.refresh();
+  }
 
   async function runCleanup() {
     setRunning(true);
@@ -33,21 +54,23 @@ export function RunAttachmentCleanupButton() {
 
     if (!response.ok || !payload || payload.ok !== true) {
       setRunning(false);
-      setError((payload as { ok: false; error?: { message?: string } } | null)?.error?.message ?? "Cleanup run failed");
+      const message = (payload as { ok: false; error?: { message?: string } } | null)?.error?.message ?? "Cleanup run failed";
+      setError(message);
+      pushResultParams({ run: "error", message });
       return;
     }
 
     setResult(payload.data);
     setRunning(false);
-    router.refresh();
+    pushResultParams({ run: "ok", result: payload.data });
   }
 
   return (
     <div className="grid gap-2">
       <button
         type="button"
-        onClick={runCleanup}
         disabled={running}
+        onClick={runCleanup}
         className="w-fit rounded-md border border-border px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60"
       >
         {running ? "Running cleanup..." : "Run Attachment Cleanup Now"}

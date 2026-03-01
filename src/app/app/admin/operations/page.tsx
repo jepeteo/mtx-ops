@@ -36,6 +36,11 @@ function getEntityHref(entityType: string | null, entityId: string | null) {
 type Search = {
   range?: string;
   view?: string;
+  cleanupRun?: string;
+  cleanupScanned?: string;
+  cleanupDeleted?: string;
+  cleanupFailed?: string;
+  cleanupMessage?: string;
 };
 
 const RANGE_HOURS: Record<string, number | null> = {
@@ -56,6 +61,12 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
       ? resolvedSearch.range
       : "7d";
   const selectedView = resolvedSearch.view && VIEW_OPTIONS.has(resolvedSearch.view) ? resolvedSearch.view : "all";
+
+  const cleanupRun = resolvedSearch.cleanupRun === "ok" || resolvedSearch.cleanupRun === "error" ? resolvedSearch.cleanupRun : null;
+  const cleanupScanned = Number(resolvedSearch.cleanupScanned ?? "0");
+  const cleanupDeleted = Number(resolvedSearch.cleanupDeleted ?? "0");
+  const cleanupFailed = Number(resolvedSearch.cleanupFailed ?? "0");
+  const cleanupMessage = resolvedSearch.cleanupMessage ?? "Cleanup run failed";
 
   const rangeHours = RANGE_HOURS[selectedRange];
   const since = rangeHours ? new Date(Date.now() - rangeHours * 60 * 60 * 1000) : null;
@@ -157,6 +168,18 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
           Operations
         </Link>
       </div>
+
+      {cleanupRun === "ok" ? (
+        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Cleanup completed: scanned {cleanupScanned}, deleted {cleanupDeleted}, failed {cleanupFailed}.
+        </div>
+      ) : null}
+
+      {cleanupRun === "error" ? (
+        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+          Cleanup failed: {cleanupMessage}
+        </div>
+      ) : null}
 
       <Card>
         <CardHeader>
