@@ -32,6 +32,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
+    {
+      id: "export-workspace",
+      label: "Export Workspace JSON",
+      hint: "Admin-only JSON backup",
+      onSelect: () => window.open("/api/export/workspace", "_blank", "noopener,noreferrer"),
+    },
   ];
 
   return (

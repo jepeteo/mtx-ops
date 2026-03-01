@@ -46,4 +46,4 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 ## Phase 7 — Polish
 - Global search + command palette (baseline implemented for clients/projects/tasks/notes)
 - Inactivity notifications (refined: broader activity sources + weekly reminder buckets)
-- Export (workspace JSON)
+- Export (workspace JSON baseline implemented via admin-only API)

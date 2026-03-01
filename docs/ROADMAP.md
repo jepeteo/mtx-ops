@@ -87,5 +87,5 @@
 - Global search baseline is implemented (`/app/search`, `GET /api/search`) for clients/projects/tasks/notes.
 - App shell navigation and command palette now include Search entry points.
 - Pending in Phase 7 search: broaden coverage to domains/providers and richer action shortcuts.
-- Inactivity notifications
-- Export workspace JSON
+- Inactivity reminders are refined with broader client activity sources and weekly post-threshold dedupe buckets.
+- Workspace export baseline is implemented via admin-only `GET /api/export/workspace` returning downloadable JSON and logging export activity.
