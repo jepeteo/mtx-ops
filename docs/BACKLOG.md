@@ -46,6 +46,8 @@ Status note (2026-03-01): projects baseline is implemented with keyPrefix unique
 ### D4 — Dependencies/blocked
 
 ## Epic E — Knowledge & Continuity
+Status note (2026-03-01): notes baseline is implemented via `POST /api/notes` with scoped entity validation and Client Card note capture/list UI.
+
 ### E1 — Notes
 ### E2 — Decisions (ADR-lite)
 ### E3 — Handovers + acknowledgement

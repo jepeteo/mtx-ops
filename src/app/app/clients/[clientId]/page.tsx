@@ -6,6 +6,7 @@ import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
 import { DeleteServiceButton } from "@/components/clients/DeleteServiceButton";
 import { UpdateServiceStatusButton } from "@/components/clients/UpdateServiceStatusButton";
 import { UpdateServiceReminderRules } from "@/components/clients/UpdateServiceReminderRules";
+import { CreateNoteForm } from "@/components/notes/CreateNoteForm";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
@@ -19,6 +20,34 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
   });
 
   if (!client) notFound();
+
+  const notes = await db.note.findMany({
+    where: {
+      workspaceId: session.workspaceId,
+      entityType: "Client",
+      entityId: client.id,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+
+  const authorIds = Array.from(new Set(notes.map((note) => note.authorId)));
+  const authors =
+    authorIds.length > 0
+      ? await db.user.findMany({
+          where: {
+            workspaceId: session.workspaceId,
+            id: { in: authorIds },
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        })
+      : [];
+
+  const authorMap = new Map(authors.map((author) => [author.id, author.name || author.email]));
 
   return (
     <div>
@@ -124,6 +153,20 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
         ))}
         {client.vaultPointers.length === 0 && <li style={{ color: "#666" }}>No vault pointers yet.</li>}
       </ul>
+
+      <h3>Notes</h3>
+      <CreateNoteForm entityType="Client" entityId={client.id} />
+      <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+        {notes.map((note) => (
+          <div key={note.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+              {authorMap.get(note.authorId) || "Unknown"} · {new Date(note.createdAt).toLocaleString()}
+            </div>
+            <div style={{ whiteSpace: "pre-wrap" }}>{note.body}</div>
+          </div>
+        ))}
+        {notes.length === 0 ? <div style={{ color: "#666" }}>No notes yet.</div> : null}
+      </div>
     </div>
   );
 }

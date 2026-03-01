@@ -53,6 +53,11 @@
 - Handovers (acknowledge flow)
 - Client Timeline
 
+### Current status (2026-03-01)
+- Notes baseline is implemented with `POST /api/notes` and scoped entity validation (`Client`, `Project`, `Task`).
+- Client Card now includes note capture and timeline-style note listing for continuity.
+- Pending in Phase 4: decisions, handover acknowledgement flow, and unified client timeline across entities.
+
 ## Phase 5 — Attachments
 - Upload + storage integration
 - Attach to entities

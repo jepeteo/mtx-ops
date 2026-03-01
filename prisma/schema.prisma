@@ -81,6 +81,7 @@ model Workspace {
   milestones  Milestone[]
   tasks       Task[]
   taskDependencies TaskDependency[]
+  notes       Note[]
   notifications Notification[]
   activityLog ActivityLog[]
 }
@@ -191,6 +192,22 @@ model TaskDependency {
   @@index([workspaceId, createdAt])
   @@index([blockedTaskId])
   @@index([blockerTaskId])
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  workspaceId String
+  authorId   String
+  entityType String
+  entityId   String
+  body       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, entityType, entityId, createdAt])
 }
 
 model Service {
