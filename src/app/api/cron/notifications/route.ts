@@ -30,7 +30,11 @@ export async function GET(req: Request) {
 
   if (env.CRON_SECRET) {
     const headerSecret = req.headers.get("x-cron-secret");
-    if (!headerSecret || headerSecret !== env.CRON_SECRET) {
+    const authorization = req.headers.get("authorization") ?? "";
+    const bearerSecret = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
+
+    const isValid = headerSecret === env.CRON_SECRET || bearerSecret === env.CRON_SECRET;
+    if (!isValid) {
       return fail(requestId, "FORBIDDEN", "Invalid cron secret", undefined, 403);
     }
   }
@@ -61,7 +65,7 @@ export async function GET(req: Request) {
     const now = new Date();
     const newNotifications: Array<{
       workspaceId: string;
-      type: "RENEWAL";
+      type: "RENEWAL" | "INACTIVITY";
       status: "OPEN";
       entityType: string;
       entityId: string;
@@ -113,18 +117,31 @@ export async function GET(req: Request) {
       },
     });
 
-    for (const client of clients) {
-      const lastClientActivity = await db.activityLog.findFirst({
-        where: {
-          workspaceId: client.workspaceId,
-          entityType: "Client",
-          entityId: client.id,
-        },
-        orderBy: { createdAt: "desc" },
-        select: { createdAt: true },
-      });
+    const clientIds = clients.map((client) => client.id);
+    const recentClientActivity =
+      clientIds.length > 0
+        ? await db.activityLog.findMany({
+            where: {
+              entityType: "Client",
+              entityId: { in: clientIds },
+            },
+            orderBy: { createdAt: "desc" },
+            select: {
+              entityId: true,
+              createdAt: true,
+            },
+          })
+        : [];
 
-      const lastActivityAt = lastClientActivity?.createdAt ?? client.updatedAt;
+    const latestByClient = new Map<string, Date>();
+    for (const activity of recentClientActivity) {
+      if (!latestByClient.has(activity.entityId)) {
+        latestByClient.set(activity.entityId, activity.createdAt);
+      }
+    }
+
+    for (const client of clients) {
+      const lastActivityAt = latestByClient.get(client.id) ?? client.updatedAt;
       const inactiveDays = daysUntil(lastActivityAt, now);
 
       if (inactiveDays < INACTIVITY_DAYS) continue;
