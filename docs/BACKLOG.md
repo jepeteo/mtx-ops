@@ -59,6 +59,7 @@ Status note (2026-03-01): attachment permissions are hardened with Admin/Owner-o
 Status note (2026-03-01): broader entity-level attachment UX is implemented with upload/list sections on Project and Task pages.
 Status note (2026-03-01): unlink controls are implemented on Client/Project/Task attachment rows via `DELETE /api/attachments/links/:linkId`, with ActivityLog entries and orphan attachment cleanup.
 Status note (2026-03-01): orphan unlink cleanup now attempts S3 object deletion with structured error logging while keeping unlink flow resilient.
+Status note (2026-03-01): orphan cleanup retry cron is implemented via `GET /api/cron/attachments-cleanup` to sweep aged orphan attachments and retry storage deletion.
 
 ### F1 — Upload
 ### F2 — Link to entities
