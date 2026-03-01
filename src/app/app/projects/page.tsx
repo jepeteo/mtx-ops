@@ -66,7 +66,12 @@ export default async function ProjectsPage() {
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{project.status}</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{project._count.tasks}</td>
 								<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", minWidth: 300 }}>
-									<ProjectRowActions projectId={project.id} status={project.status} />
+									<ProjectRowActions
+										projectId={project.id}
+										name={project.name}
+										keyPrefix={project.keyPrefix}
+										status={project.status}
+									/>
 								</td>
 							</tr>
 						))}

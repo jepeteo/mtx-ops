@@ -5,21 +5,44 @@ import { useRouter } from "next/navigation";
 
 type ProjectStatus = "ACTIVE" | "ON_HOLD" | "COMPLETED" | "ARCHIVED";
 
-export function ProjectRowActions({ projectId, status }: { projectId: string; status: ProjectStatus }) {
+export function ProjectRowActions({
+  projectId,
+  name,
+  keyPrefix,
+  status,
+}: {
+  projectId: string;
+  name: string;
+  keyPrefix: string;
+  status: ProjectStatus;
+}) {
   const router = useRouter();
 
+  const [nextName, setNextName] = useState(name);
+  const [nextKeyPrefix, setNextKeyPrefix] = useState(keyPrefix);
   const [nextStatus, setNextStatus] = useState<ProjectStatus>(status);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function saveStatus() {
+  async function saveProject() {
     setSaving(true);
     setError(null);
+
+    const normalizedKeyPrefix = nextKeyPrefix.trim().toUpperCase();
+    if (!normalizedKeyPrefix.match(/^[A-Z0-9]{2,16}$/)) {
+      setSaving(false);
+      setError("Key prefix must be 2-16 chars (A-Z, 0-9)");
+      return;
+    }
 
     const response = await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
       headers: { "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ status: nextStatus }),
+      body: JSON.stringify({
+        name: nextName.trim(),
+        keyPrefix: normalizedKeyPrefix,
+        status: nextStatus,
+      }),
     });
 
     if (response.ok) {
@@ -62,7 +85,20 @@ export function ProjectRowActions({ projectId, status }: { projectId: string; st
 
   return (
     <div style={{ display: "grid", gap: 4 }}>
+      <input
+        value={nextName}
+        onChange={(event) => setNextName(event.target.value)}
+        placeholder="Project name"
+        style={{ padding: 6, fontSize: 12 }}
+      />
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input
+          value={nextKeyPrefix}
+          onChange={(event) => setNextKeyPrefix(event.target.value.toUpperCase())}
+          placeholder="Prefix"
+          style={{ width: 110, padding: 6, fontSize: 12 }}
+        />
+
         <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ProjectStatus)} style={{ padding: 6 }}>
           <option value="ACTIVE">ACTIVE</option>
           <option value="ON_HOLD">ON_HOLD</option>
@@ -70,7 +106,7 @@ export function ProjectRowActions({ projectId, status }: { projectId: string; st
           <option value="ARCHIVED">ARCHIVED</option>
         </select>
 
-        <button type="button" onClick={saveStatus} disabled={saving}>
+        <button type="button" onClick={saveProject} disabled={saving}>
           Save
         </button>
 

@@ -43,7 +43,8 @@
 - `/app/projects` now supports project create/list/status update/delete; `/app/tasks` supports optional project linkage.
 - Task dependency baseline is implemented via `POST /api/tasks/:id/dependencies` and visible dependency counts in `/app/tasks`.
 - `/app/tasks` now supports list and baseline kanban views (`?view=kanban`) with status buckets.
-- Pending in Phase 3: milestones and richer project/task edit workflows.
+- Inline edit workflows are now available for project name/prefix/status and task title/project/due-date/status.
+- Pending in Phase 3: milestones.
 
 ## Phase 4 — Knowledge & Continuity
 - Notes

@@ -136,7 +136,18 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 										Blocked by {task._count.blockedBy} · Blocks {task._count.blocks}
 									</td>
 									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", minWidth: 260 }}>
-										<TaskRowActions taskId={task.id} status={task.status} />
+										<TaskRowActions
+											taskId={task.id}
+											title={task.title}
+											status={task.status}
+											dueAt={task.dueAt ? task.dueAt.toISOString() : null}
+											projectId={task.projectId}
+											projects={projects.map((project) => ({
+												id: project.id,
+												name: project.name,
+												keyPrefix: project.keyPrefix,
+											}))}
+										/>
 									</td>
 								</tr>
 							))}
@@ -166,7 +177,18 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 											<div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
 												{task.project ? `${task.project.keyPrefix} · ${task.project.name}` : "No project"}
 											</div>
-											<TaskRowActions taskId={task.id} status={task.status} />
+											<TaskRowActions
+												taskId={task.id}
+												title={task.title}
+												status={task.status}
+												dueAt={task.dueAt ? task.dueAt.toISOString() : null}
+												projectId={task.projectId}
+												projects={projects.map((project) => ({
+													id: project.id,
+													name: project.name,
+													keyPrefix: project.keyPrefix,
+												}))}
+											/>
 										</div>
 									))}
 									{bucket.length === 0 ? <div style={{ color: "#666", fontSize: 13 }}>No tasks</div> : null}
