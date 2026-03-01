@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireAuthApi } from "@/lib/auth/guards";
+import { requireRoleApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
@@ -14,7 +14,7 @@ const LinkSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const auth = await requireAuthApi(req);
+  const auth = await requireRoleApi(req, "ADMIN");
   if ("errorResponse" in auth) return auth.errorResponse;
 
   const body = await req.json().catch(() => null);

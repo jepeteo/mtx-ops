@@ -17,6 +17,7 @@ import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 export default async function ClientCardPage({ params }: { params: { clientId: string } }) {
   const session = await requireSession();
+  const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
   const client = await db.client.findFirst({
     where: { id: params.clientId, workspaceId: session.workspaceId },
     include: {
@@ -305,7 +306,11 @@ export default async function ClientCardPage({ params }: { params: { clientId: s
       </div>
 
       <h3>Attachments</h3>
-      <UploadAttachmentForm entityType="Client" entityId={client.id} />
+      {canManageAttachments ? (
+        <UploadAttachmentForm entityType="Client" entityId={client.id} />
+      ) : (
+        <div style={{ color: "#666", marginBottom: 8 }}>Only Admin/Owner roles can upload and link attachments.</div>
+      )}
       <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
         {attachmentLinks.map((link) => {
           const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);

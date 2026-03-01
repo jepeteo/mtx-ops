@@ -36,7 +36,7 @@ Status note (2026-03-01): Phase 0 baseline is delivered (auth/session, RBAC guar
 ## Phase 5 — Attachments
 - Upload to S3-compatible storage
 - Attach to entities
-- Permissions
+- Permissions (implemented: Admin/Owner write, Member read-only upload UI)
 
 ## Phase 6 — Vaultwarden
 - Vault pointers CRUD
