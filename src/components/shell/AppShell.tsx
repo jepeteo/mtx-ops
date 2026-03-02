@@ -17,8 +17,8 @@ const nav = [
   { href: "/app/tasks", label: "Tasks", icon: KanbanSquare },
   { href: "/app/search", label: "Search", icon: Search },
   { href: "/app/notifications", label: "Notifications", icon: Bell },
-  { href: "/app/admin/users", label: "Admin", icon: Settings },
-  { href: "/app/admin/operations", label: "Admin Ops", icon: Settings },
+  { href: "/app/admin/users", label: "Admin Users", icon: Settings },
+  { href: "/app/admin/operations", label: "Admin Operations", icon: Settings },
   { href: "/app/admin/activity", label: "Admin Activity", icon: Settings },
 ];
 
@@ -38,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
+    { id: "go-admin-users", label: "Open Admin Users", hint: "Manage workspace users", onSelect: () => (window.location.href = "/app/admin/users") },
     { id: "go-admin-ops", label: "Open Admin Operations", hint: "Cleanup activity and failures", onSelect: () => (window.location.href = "/app/admin/operations") },
     { id: "go-admin-activity", label: "Open Admin Activity", hint: "Audit workflow and filters", onSelect: () => (window.location.href = "/app/admin/activity") },
     {
