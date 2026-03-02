@@ -3,9 +3,10 @@ import { db } from "@/lib/db/db";
 import { notFound } from "next/navigation";
 import { DeleteClientButton } from "@/components/clients/DeleteClientButton";
 
-export default async function EditClientPage({ params }: { params: { clientId: string } }) {
+export default async function EditClientPage({ params }: { params: Promise<{ clientId: string }> }) {
   const session = await requireSession();
-  const client = await db.client.findFirst({ where: { id: params.clientId, workspaceId: session.workspaceId } });
+  const routeParams = await params;
+  const client = await db.client.findFirst({ where: { id: routeParams.clientId, workspaceId: session.workspaceId } });
   if (!client) notFound();
 
   return (

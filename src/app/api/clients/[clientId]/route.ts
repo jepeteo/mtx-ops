@@ -11,7 +11,7 @@ const UpdateSchema = z.object({
   pinnedNotes: z.string().max(20000).optional().nullable(),
 });
 
-type RouteParams = { clientId: string };
+type RouteParams = Promise<{ clientId: string }>;
 
 async function updateClient(params: {
   auth: Awaited<ReturnType<typeof requireAuthApi>> & { session: { userId: string; workspaceId: string } };
@@ -52,9 +52,11 @@ export async function GET(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const routeParams = await params;
+
   const client = await db.client.findFirst({
     where: {
-      id: params.clientId,
+      id: routeParams.clientId,
       workspaceId: auth.session.workspaceId,
     },
     include: {
@@ -65,7 +67,7 @@ export async function GET(req: Request, { params }: { params: RouteParams }) {
   });
 
   if (!client) {
-    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: params.clientId }, 404);
+    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: routeParams.clientId }, 404);
   }
 
   return ok(auth.requestId, { client });
@@ -75,6 +77,8 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const routeParams = await params;
+
   const body = await req.json().catch(() => null);
   const parsed = UpdateSchema.safeParse(body);
   if (!parsed.success) {
@@ -83,7 +87,7 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
 
   const updated = await updateClient({
     auth,
-    clientId: params.clientId,
+    clientId: routeParams.clientId,
     payload: parsed.data,
   });
 
@@ -95,13 +99,15 @@ export async function DELETE(req: Request, { params }: { params: RouteParams }) 
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const routeParams = await params;
+
   const existing = await db.client.findFirst({
-    where: { id: params.clientId, workspaceId: auth.session.workspaceId },
+    where: { id: routeParams.clientId, workspaceId: auth.session.workspaceId },
     select: { id: true, name: true },
   });
 
   if (!existing) {
-    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: params.clientId }, 404);
+    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: routeParams.clientId }, 404);
   }
 
   await db.client.delete({ where: { id: existing.id } });
@@ -122,6 +128,8 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const routeParams = await params;
+
   const contentType = req.headers.get("content-type") || "";
   const expectsJson = contentType.includes("application/json") || (req.headers.get("accept") || "").includes("application/json");
 
@@ -134,7 +142,7 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
 
     const updated = await updateClient({
       auth,
-      clientId: params.clientId,
+      clientId: routeParams.clientId,
       payload: parsed.data,
     });
 
@@ -161,7 +169,7 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
 
   const updated = await updateClient({
     auth,
-    clientId: params.clientId,
+    clientId: routeParams.clientId,
     payload: parsed.data,
   });
 

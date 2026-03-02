@@ -1,4 +1,5 @@
 import { db } from "@/lib/db/db";
+import { Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 import { fail, getRequestId, logServerError, ok } from "@/lib/http/responses";
 import {
@@ -52,18 +53,7 @@ export async function GET(req: Request) {
     });
 
     const now = new Date();
-    const newNotifications: Array<{
-      workspaceId: string;
-      type: "RENEWAL" | "INACTIVITY" | "TASK";
-      status: "OPEN";
-      entityType: string;
-      entityId: string;
-      title: string;
-      message: string;
-      dueAt: Date;
-      dedupeKey: string;
-      metadata: Record<string, unknown>;
-    }> = [];
+    const newNotifications: Prisma.NotificationCreateManyInput[] = [];
 
     for (const service of services) {
       if (!service.renewalDate) continue;

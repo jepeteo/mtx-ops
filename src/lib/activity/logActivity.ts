@@ -1,4 +1,5 @@
 import { db } from "@/lib/db/db";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -19,7 +20,7 @@ export async function logActivity(input: z.infer<typeof Schema>) {
       action: parsed.action,
       entityType: parsed.entityType,
       entityId: parsed.entityId,
-      metadata: parsed.metadata ?? {},
+      metadata: (parsed.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
 }

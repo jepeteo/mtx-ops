@@ -18,11 +18,13 @@ const UpdateTaskSchema = z
     message: "At least one field must be provided",
   });
 
-type RouteParams = { taskId: string };
+type RouteParams = Promise<{ taskId: string }>;
 
 export async function PATCH(req: Request, { params }: { params: RouteParams }) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
+
+  const routeParams = await params;
 
   const body = await req.json().catch(() => null);
   const parsed = UpdateTaskSchema.safeParse(body);
@@ -32,7 +34,7 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
 
   const existing = await db.task.findFirst({
     where: {
-      id: params.taskId,
+      id: routeParams.taskId,
       workspaceId: auth.session.workspaceId,
     },
     select: {
@@ -46,7 +48,7 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
   });
 
   if (!existing) {
-    return fail(auth.requestId, "NOT_FOUND", "Task not found", { taskId: params.taskId }, 404);
+    return fail(auth.requestId, "NOT_FOUND", "Task not found", { taskId: routeParams.taskId }, 404);
   }
 
   if (parsed.data.clientId) {
@@ -144,9 +146,11 @@ export async function DELETE(req: Request, { params }: { params: RouteParams }) 
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
+  const routeParams = await params;
+
   const existing = await db.task.findFirst({
     where: {
-      id: params.taskId,
+      id: routeParams.taskId,
       workspaceId: auth.session.workspaceId,
     },
     select: {
@@ -158,7 +162,7 @@ export async function DELETE(req: Request, { params }: { params: RouteParams }) 
   });
 
   if (!existing) {
-    return fail(auth.requestId, "NOT_FOUND", "Task not found", { taskId: params.taskId }, 404);
+    return fail(auth.requestId, "NOT_FOUND", "Task not found", { taskId: routeParams.taskId }, 404);
   }
 
   await db.task.delete({ where: { id: existing.id } });

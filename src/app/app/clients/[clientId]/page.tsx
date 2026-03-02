@@ -23,12 +23,13 @@ type Search = {
   timelineLimit?: string;
 };
 
-export default async function ClientCardPage({ params, searchParams }: { params: { clientId: string }; searchParams?: Promise<Search> }) {
+export default async function ClientCardPage({ params, searchParams }: { params: Promise<{ clientId: string }>; searchParams?: Promise<Search> }) {
   const session = await requireSession();
+  const routeParams = await params;
   const resolvedSearch = (await searchParams) ?? {};
   const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
   const client = await db.client.findFirst({
-    where: { id: params.clientId, workspaceId: session.workspaceId },
+    where: { id: routeParams.clientId, workspaceId: session.workspaceId },
     include: {
       services: { orderBy: { renewalDate: "asc" } },
       assetLinks: { orderBy: { createdAt: "desc" }, take: 20 },
@@ -37,6 +38,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
   });
 
   if (!client) notFound();
+  const clientId = client.id;
 
   const notes = await db.note.findMany({
     where: {
@@ -162,7 +164,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
     const params = new URLSearchParams();
     params.set("timelineType", type);
     params.set("timelineLimit", String(limit));
-    return `/app/clients/${client.id}?${params.toString()}`;
+    return `/app/clients/${clientId}?${params.toString()}`;
   }
 
   return (

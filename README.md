@@ -39,6 +39,22 @@ npm run dev
 
 Open: http://localhost:3000
 
+## Testing
+
+Unit tests:
+```bash
+npm test
+```
+
+E2E smoke (Playwright):
+```bash
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
+E2E credentials are read from `E2E_EMAIL` / `E2E_PASSWORD` (or fallback to `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD`).
+
 ### Seeded owner user
 - Created from `.env.local` values:
 	- `SEED_OWNER_EMAIL`
