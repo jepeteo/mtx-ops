@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Search = {
   q?: string;
@@ -112,106 +113,131 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
   }
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div className="space-y-5">
       <div>
-        <h2 style={{ marginTop: 0, marginBottom: 6 }}>Search</h2>
-        <p style={{ margin: 0, color: "#666" }}>Search clients, projects, tasks, notes, providers, and domains/links.</p>
+        <div className="text-xs font-semibold tracking-wider text-muted-foreground">DISCOVERY</div>
+        <h1 className="mt-1 text-xl font-semibold">Search</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Search clients, projects, tasks, notes, providers, and domains/links.</p>
       </div>
 
-      <form action="/app/search" method="get" style={{ display: "flex", gap: 8, maxWidth: 720 }}>
+      <form action="/app/search" method="get" className="flex max-w-2xl gap-2">
         <input
           name="q"
           defaultValue={query}
           placeholder="Type at least 2 characters..."
-          style={{ flex: 1, padding: 8 }}
+          className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
         />
-        <button type="submit">Search</button>
+        <button type="submit" className="rounded-md border border-border px-3 py-1 text-sm">Search</button>
       </form>
 
-      {!enabled ? <div style={{ color: "#666" }}>Enter at least 2 characters to search.</div> : null}
+      {!enabled ? <div className="text-sm text-muted-foreground">Enter at least 2 characters to search.</div> : null}
 
       {enabled ? (
         <>
-          <section>
-            <h3>Clients ({clients.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Clients ({clients.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {clients.map((client) => (
                 <li key={client.id}>
-                  <Link href={`/app/clients/${client.id}`}>{client.name}</Link> <span style={{ color: "#666" }}>({client.status})</span>
+                  <Link href={`/app/clients/${client.id}`}>{client.name}</Link> <span className="text-muted-foreground">({client.status})</span>
                 </li>
               ))}
-              {clients.length === 0 ? <li style={{ color: "#666" }}>No matching clients.</li> : null}
+              {clients.length === 0 ? <li className="text-muted-foreground">No matching clients.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section>
-            <h3>Projects ({projects.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Projects ({projects.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {projects.map((project) => (
                 <li key={project.id}>
-                  <Link href="/app/projects">{project.keyPrefix} · {project.name}</Link> <span style={{ color: "#666" }}>({project.status})</span>
+                  <Link href="/app/projects">{project.keyPrefix} · {project.name}</Link> <span className="text-muted-foreground">({project.status})</span>
                 </li>
               ))}
-              {projects.length === 0 ? <li style={{ color: "#666" }}>No matching projects.</li> : null}
+              {projects.length === 0 ? <li className="text-muted-foreground">No matching projects.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section>
-            <h3>Tasks ({tasks.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Tasks ({tasks.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {tasks.map((task) => (
                 <li key={task.id}>
                   <Link href="/app/tasks">{task.title}</Link>{" "}
-                  <span style={{ color: "#666" }}>
+                  <span className="text-muted-foreground">
                     ({task.status}{task.project ? ` · ${task.project.keyPrefix}` : ""})
                   </span>
                 </li>
               ))}
-              {tasks.length === 0 ? <li style={{ color: "#666" }}>No matching tasks.</li> : null}
+              {tasks.length === 0 ? <li className="text-muted-foreground">No matching tasks.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section>
-            <h3>Services / Providers ({services.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Services / Providers ({services.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {services.map((service) => (
                 <li key={service.id}>
                   <Link href={`/app/clients/${service.clientId}`}>{service.client.name} · {service.name}</Link>{" "}
-                  <span style={{ color: "#666" }}>({service.provider} · {service.status})</span>
+                  <span className="text-muted-foreground">({service.provider} · {service.status})</span>
                 </li>
               ))}
-              {services.length === 0 ? <li style={{ color: "#666" }}>No matching services/providers.</li> : null}
+              {services.length === 0 ? <li className="text-muted-foreground">No matching services/providers.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section>
-            <h3>Domains / Links ({assetLinks.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Domains / Links ({assetLinks.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {assetLinks.map((link) => (
                 <li key={link.id}>
                   <Link href={`/app/clients/${link.clientId}`}>{link.client.name} · {link.label}</Link>{" "}
-                  <span style={{ color: "#666" }}>({link.kind})</span>{" "}
-                  <a href={link.url} target="_blank" rel="noreferrer" style={{ color: "#666" }}>↗</a>
+                  <span className="text-muted-foreground">({link.kind})</span>{" "}
+                  <a href={link.url} target="_blank" rel="noreferrer" className="text-muted-foreground">↗</a>
                 </li>
               ))}
-              {assetLinks.length === 0 ? <li style={{ color: "#666" }}>No matching links/domains.</li> : null}
+              {assetLinks.length === 0 ? <li className="text-muted-foreground">No matching links/domains.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section>
-            <h3>Notes ({notes.length})</h3>
-            <ul>
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes ({notes.length})</CardTitle>
+              <CardDescription>Quick excerpts from matching client notes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+            <ul className="space-y-1 text-sm">
               {notes.map((note) => (
                 <li key={note.id}>
                   <Link href={note.entityType === "Client" ? `/app/clients/${note.entityId}` : "/app/clients"}>
                     {note.body.slice(0, 120)}{note.body.length > 120 ? "…" : ""}
-                  </Link>{" "}
-                  <span style={{ color: "#666" }}>({note.entityType})</span>
+                  </Link> <span className="text-muted-foreground">({note.entityType})</span>
                 </li>
               ))}
-              {notes.length === 0 ? <li style={{ color: "#666" }}>No matching notes.</li> : null}
+              {notes.length === 0 ? <li className="text-muted-foreground">No matching notes.</li> : null}
             </ul>
-          </section>
+            </CardContent>
+          </Card>
         </>
       ) : null}
     </div>

@@ -7,6 +7,7 @@ import { AddTaskDependencyForm } from "@/components/tasks/AddTaskDependencyForm"
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Search = {
 	view?: string;
@@ -95,32 +96,23 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 	}
 
 	return (
-		<div style={{ display: "grid", gap: 18 }}>
-			<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+		<div className="space-y-5">
+			<div className="flex items-center justify-between gap-3">
 				<div>
-				<h2 style={{ marginTop: 0, marginBottom: 6 }}>Tasks</h2>
-				<p style={{ color: "#666", margin: 0 }}>Track due work and surface due-date notifications.</p>
+				<div className="text-xs font-semibold tracking-wider text-muted-foreground">DELIVERY</div>
+				<h1 className="mt-1 text-xl font-semibold">Tasks</h1>
+				<p className="mt-1 text-sm text-muted-foreground">Track due work and surface due-date notifications.</p>
 				</div>
-				<div style={{ display: "flex", gap: 8 }}>
+				<div className="flex gap-2 text-sm">
 					<Link
 						href="/app/tasks"
-						style={{
-							padding: "6px 10px",
-							border: "1px solid #ddd",
-							borderRadius: 8,
-							background: view === "list" ? "#f3f4f6" : "transparent",
-						}}
+						className={`rounded-md border px-3 py-1 ${view === "list" ? "border-foreground bg-secondary" : "border-border"}`}
 					>
 						List
 					</Link>
 					<Link
 						href="/app/tasks?view=kanban"
-						style={{
-							padding: "6px 10px",
-							border: "1px solid #ddd",
-							borderRadius: 8,
-							background: view === "kanban" ? "#f3f4f6" : "transparent",
-						}}
+						className={`rounded-md border px-3 py-1 ${view === "kanban" ? "border-foreground bg-secondary" : "border-border"}`}
 					>
 						Kanban
 					</Link>
@@ -134,37 +126,41 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 			) : null}
 
 			{view === "list" ? (
-				<div style={{ border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
-					<table style={{ width: "100%", borderCollapse: "collapse" }}>
+				<Card>
+					<CardHeader>
+						<CardTitle>Task list</CardTitle>
+					</CardHeader>
+					<CardContent className="overflow-x-auto">
+					<table className="w-full text-left text-sm">
 						<thead>
-							<tr style={{ textAlign: "left", background: "#fafafa" }}>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Title</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Project</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Client</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Due</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Status</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Deps</th>
-								<th style={{ padding: 10, borderBottom: "1px solid #eee" }}>Actions</th>
+							<tr className="text-muted-foreground">
+								<th className="py-2">Title</th>
+								<th className="py-2">Project</th>
+								<th className="py-2">Client</th>
+								<th className="py-2">Due</th>
+								<th className="py-2">Status</th>
+								<th className="py-2">Deps</th>
+								<th className="py-2">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
 							{tasks.map((task) => (
-								<tr key={task.id}>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", fontWeight: 500 }}>{task.title}</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+								<tr key={task.id} className="border-t border-border">
+									<td className="py-2 font-medium">{task.title}</td>
+									<td className="py-2">
 										{task.project ? `${task.project.keyPrefix} · ${task.project.name}` : "—"}
 									</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+									<td className="py-2">
 										{task.client ? <Link href={`/app/clients/${task.client.id}`}>{task.client.name}</Link> : "—"}
 									</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+									<td className="py-2">
 										{task.dueAt ? new Date(task.dueAt).toLocaleDateString() : "—"}
 									</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>{task.status}</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1" }}>
+									<td className="py-2">{task.status}</td>
+									<td className="py-2">
 										Blocked by {task._count.blockedBy} · Blocks {task._count.blocks}
 									</td>
-									<td style={{ padding: 10, borderBottom: "1px solid #f1f1f1", minWidth: 260 }}>
+									<td className="min-w-[260px] py-2">
 										<TaskRowActions
 											taskId={task.id}
 											title={task.title}
@@ -182,28 +178,31 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 							))}
 							{tasks.length === 0 ? (
 								<tr>
-									<td colSpan={7} style={{ padding: 14, color: "#666" }}>
+									<td colSpan={7} className="py-4 text-muted-foreground">
 										No tasks yet.
 									</td>
 								</tr>
 							) : null}
 						</tbody>
 					</table>
-				</div>
+					</CardContent>
+				</Card>
 			) : (
-				<div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(220px, 1fr))", gap: 12 }}>
+				<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
 					{KANBAN_STATUSES.map((status) => {
 						const bucket = tasks.filter((task) => task.status === status);
 						return (
-							<div key={status} style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
-								<div style={{ fontWeight: 700, marginBottom: 8 }}>
+							<Card key={status}>
+								<CardHeader>
+									<CardTitle>
 									{status} ({bucket.length})
-								</div>
-								<div style={{ display: "grid", gap: 8 }}>
+									</CardTitle>
+								</CardHeader>
+								<CardContent className="grid gap-2">
 									{bucket.map((task) => (
-										<div key={task.id} style={{ border: "1px solid #f1f1f1", borderRadius: 10, padding: 8 }}>
-											<div style={{ fontWeight: 600, marginBottom: 4 }}>{task.title}</div>
-											<div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+										<div key={task.id} className="rounded-md border border-border p-2">
+											<div className="mb-1 font-semibold">{task.title}</div>
+											<div className="mb-1 text-xs text-muted-foreground">
 												{task.project ? `${task.project.keyPrefix} · ${task.project.name}` : "No project"}
 											</div>
 											<TaskRowActions
@@ -220,34 +219,34 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 											/>
 										</div>
 									))}
-									{bucket.length === 0 ? <div style={{ color: "#666", fontSize: 13 }}>No tasks</div> : null}
-								</div>
-							</div>
+									{bucket.length === 0 ? <div className="text-sm text-muted-foreground">No tasks</div> : null}
+								</CardContent>
+							</Card>
 						);
 					})}
 				</div>
 			)}
 
-			<section style={{ display: "grid", gap: 12 }}>
-				<h3 style={{ margin: 0 }}>Task attachments</h3>
-				{tasks.length === 0 ? <div style={{ color: "#666" }}>Create a task to attach files.</div> : null}
+			<section className="grid gap-3">
+				<h3 className="text-base font-semibold">Task attachments</h3>
+				{tasks.length === 0 ? <div className="text-sm text-muted-foreground">Create a task to attach files.</div> : null}
 				{tasks.map((task) => {
 					const links = taskAttachmentMap.get(task.id) ?? [];
 					return (
-						<div key={task.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
-							<div style={{ fontWeight: 600, marginBottom: 8 }}>{task.title}</div>
+						<div key={task.id} className="rounded-md border border-border p-3">
+							<div className="mb-2 font-semibold">{task.title}</div>
 							{canManageAttachments ? (
 								<UploadAttachmentForm entityType="Task" entityId={task.id} />
 							) : (
-								<div style={{ color: "#666", marginBottom: 8 }}>Only Admin/Owner roles can upload and link attachments.</div>
+								<div className="mb-2 text-sm text-muted-foreground">Only Admin/Owner roles can upload and link attachments.</div>
 							)}
-							<div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+							<div className="mt-2 grid gap-2">
 								{links.slice(0, 20).map((link) => {
 									const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
 									return (
-										<div key={link.id} style={{ border: "1px solid #f1f1f1", borderRadius: 10, padding: 10 }}>
-											<div style={{ fontWeight: 600 }}>{link.label || link.attachment.fileName}</div>
-											<div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+										<div key={link.id} className="rounded-md border border-border p-3">
+											<div className="font-semibold">{link.label || link.attachment.fileName}</div>
+											<div className="mb-1 text-xs text-muted-foreground">
 												{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
 											</div>
 											{canManageAttachments ? <AttachmentLinkActions linkId={link.id} /> : null}
@@ -256,12 +255,12 @@ export default async function TasksPage({ searchParams }: { searchParams?: Promi
 													Open attachment
 												</a>
 											) : (
-												<span style={{ color: "#666" }}>Storage public URL not configured</span>
+												<span className="text-sm text-muted-foreground">Storage public URL not configured</span>
 											)}
 										</div>
 									);
 								})}
-								{links.length === 0 ? <div style={{ color: "#666" }}>No task attachments yet.</div> : null}
+								{links.length === 0 ? <div className="text-sm text-muted-foreground">No task attachments yet.</div> : null}
 							</div>
 						</div>
 					);

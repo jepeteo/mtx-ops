@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --radius: 12px;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
     /* Dark, serious default */
     --background: 215 35% 6%; /* ~#0B0F14 */
@@ -42,6 +43,6 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-sans;
   }
 }
