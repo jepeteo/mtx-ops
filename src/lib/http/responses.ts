@@ -1,4 +1,6 @@
 
+import { NextResponse } from "next/server";
+
 export type ErrorCode =
   | "VALIDATION_ERROR"
   | "UNAUTHORIZED"
@@ -30,7 +32,7 @@ export function getRequestId(req: Request): string {
 }
 
 export function ok<T>(requestId: string, data: T, init?: ResponseInit) {
-  return Response.json({ ok: true, data, requestId } as OkEnvelope<T>, init);
+  return NextResponse.json({ ok: true, data, requestId } as OkEnvelope<T>, init);
 }
 
 export function fail(
@@ -40,7 +42,7 @@ export function fail(
   details?: unknown,
   status = 400,
 ) {
-  return Response.json(
+  return NextResponse.json(
     {
       ok: false,
       error: {

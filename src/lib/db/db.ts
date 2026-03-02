@@ -1,4 +1,9 @@
 import { PrismaClient } from "@prisma/client";
+import { loadEnvConfig } from "@next/env";
+
+if (!process.env.DATABASE_URL) {
+  loadEnvConfig(process.cwd());
+}
 
 declare global {
   // eslint-disable-next-line no-var
