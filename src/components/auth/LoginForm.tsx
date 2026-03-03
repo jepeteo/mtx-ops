@@ -38,35 +38,31 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>MTX Ops</CardTitle>
-        <CardDescription>Sign in to your workspace</CardDescription>
+    <Card className="w-full max-w-sm">
+      <CardHeader className="text-center">
+        <CardTitle className="text-base">Sign in</CardTitle>
+        <CardDescription>Enter your credentials to continue</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-3" onSubmit={onSubmit}>
-          <div className="space-y-2">
+        <form className="grid gap-4" onSubmit={onSubmit}>
+          <div className="grid gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">Email</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@mtxstudio.com" />
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@mtxstudio.com" autoComplete="email" />
           </div>
-          <div className="space-y-2">
+          <div className="grid gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">Password</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
 
           {error ? (
-            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs font-medium text-destructive">
               {error}
             </div>
           ) : null}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="mt-1 w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
-
-          <div className="pt-2 text-xs text-muted-foreground">
-            Tip: Press <span className="font-mono">Ctrl K</span> inside the app to jump anywhere.
-          </div>
         </form>
       </CardContent>
     </Card>
