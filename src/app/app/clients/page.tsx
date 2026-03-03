@@ -2,6 +2,8 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusPill } from "@/components/ui/status-pill";
+import { Plus } from "lucide-react";
 
 export default async function ClientsPage() {
   const session = await requireSession();
@@ -12,52 +14,51 @@ export default async function ClientsPage() {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold tracking-wider text-muted-foreground">CRM</div>
-          <h1 className="mt-1 text-xl font-semibold">Clients</h1>
+          <h1 className="text-lg font-semibold">Clients</h1>
+          <p className="text-sm text-muted-foreground">Most recently updated clients in this workspace</p>
         </div>
-        <Link className="rounded-md border border-border px-3 py-1 text-sm" href="/app/clients/new">
-          New client
+        <Link
+          href="/app/clients/new"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
+        >
+          <Plus className="h-3.5 w-3.5" /> New client
         </Link>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Client list</CardTitle>
-          <CardDescription>Most recently updated clients in this workspace.</CardDescription>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="text-muted-foreground">
-              <th className="py-2">Name</th>
-              <th className="py-2">Status</th>
-              <th className="py-2">Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clients.map((c) => (
-              <tr key={c.id} className="border-t border-border">
-                <td className="py-2">
-                  <Link href={`/app/clients/${c.id}`}>{c.name}</Link>
-                </td>
-                <td className="py-2">{c.status}</td>
-                <td className="py-2">
-                  {new Date(c.updatedAt).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-            {clients.length === 0 && (
-              <tr>
-                <td colSpan={3} className="py-4 text-muted-foreground">
-                  No clients yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clients.map((c) => (
+                  <tr key={c.id}>
+                    <td>
+                      <Link href={`/app/clients/${c.id}`} className="font-medium text-foreground hover:text-primary">
+                        {c.name}
+                      </Link>
+                    </td>
+                    <td><StatusPill status={c.status} /></td>
+                    <td className="text-muted-foreground">{new Date(c.updatedAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {clients.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="empty-state">No clients yet. Create your first client to get started.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>

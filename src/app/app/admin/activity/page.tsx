@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Search = {
   range?: string;
@@ -51,10 +51,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const actorIds = Array.from(new Set(logs.map((log) => log.actorId)));
   const users = actorIds.length
     ? await db.user.findMany({
-        where: {
-          workspaceId: session.workspaceId,
-          id: { in: actorIds },
-        },
+        where: { workspaceId: session.workspaceId, id: { in: actorIds } },
         select: { id: true, email: true, name: true },
       })
     : [];
@@ -70,124 +67,92 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     return `/app/admin/activity?${params.toString()}`;
   }
 
-  const tabClass = (active: boolean) =>
-    `rounded-md border px-3 py-1 ${active ? "border-foreground bg-secondary" : "border-border"}`;
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <div className="text-xs font-semibold tracking-wider text-muted-foreground">ADMIN</div>
-        <h1 className="mt-1 text-xl font-semibold">Activity</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Role-gated audit workflow for workspace activity logs.</p>
+        <h1 className="text-lg font-semibold">Activity</h1>
+        <p className="text-sm text-muted-foreground">Workspace audit log</p>
       </div>
 
-      <div className="flex gap-2 text-sm">
-        <Link className="rounded-md border border-border px-3 py-1" href="/app/admin/users">
-          Users
-        </Link>
-        <Link className="rounded-md border border-border px-3 py-1" href="/app/admin/operations">
-          Operations
-        </Link>
-        <Link className="rounded-md border border-foreground bg-secondary px-3 py-1" href="/app/admin/activity">
-          Activity
-        </Link>
-      </div>
+      <nav className="tab-bar">
+        <Link href="/app/admin/users">Users</Link>
+        <Link href="/app/admin/operations">Operations</Link>
+        <Link href="/app/admin/activity" className="active">Activity</Link>
+      </nav>
 
+      {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="grid gap-4 p-5">
           <div>
-            <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Range</div>
-            <div className="flex flex-wrap gap-2 text-sm">
+            <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Range</div>
+            <div className="tab-bar">
               {(["24h", "7d", "30d", "all"] as const).map((range) => (
-                <Link
-                  key={range}
-                  className={tabClass(selectedRange === range)}
-                  href={buildHref(range, actionQuery, entityType)}
-                >
-                  {range}
-                </Link>
+                <Link key={range} className={selectedRange === range ? "active" : ""} href={buildHref(range, actionQuery, entityType)}>{range}</Link>
               ))}
             </div>
           </div>
 
-          <form method="get" className="grid gap-2 md:grid-cols-3 md:items-end">
+          <form method="get" className="grid gap-3 sm:grid-cols-3 sm:items-end">
             <input type="hidden" name="range" value={selectedRange} />
-            <label className="grid gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Action contains</span>
-              <input
-                name="action"
-                defaultValue={actionQuery}
-                placeholder="e.g. client.update"
-                className="h-9 rounded-md border border-input bg-background px-3"
-              />
+            <label className="grid gap-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Action contains</span>
+              <input name="action" defaultValue={actionQuery} placeholder="e.g. client.update" className="form-input" />
             </label>
-            <label className="grid gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Entity type</span>
-              <select name="entityType" defaultValue={entityType} className="h-9 rounded-md border border-input bg-background px-3">
+            <label className="grid gap-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Entity type</span>
+              <select name="entityType" defaultValue={entityType} className="form-select">
                 <option value="">All</option>
                 {uniqueEntityTypes.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
+                  <option key={value} value={value}>{value}</option>
                 ))}
               </select>
             </label>
             <div className="flex gap-2">
-              <button type="submit" className="rounded-md border border-border px-3 py-1 text-sm">
-                Apply
-              </button>
-              <Link className="rounded-md border border-border px-3 py-1 text-sm" href={buildHref(selectedRange, "", "")}>Reset</Link>
+              <button type="submit" className="form-btn">Apply</button>
+              <Link className="form-btn-outline" href={buildHref(selectedRange, "", "")}>Reset</Link>
             </div>
           </form>
         </CardContent>
       </Card>
 
+      {/* Log table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Activity log ({logs.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
+          <div className="border-b border-border px-5 py-3">
+            <div className="text-sm font-medium">Activity log ({logs.length})</div>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="data-table">
               <thead>
-                <tr className="text-muted-foreground">
-                  <th className="py-2">When</th>
-                  <th className="py-2">Actor</th>
-                  <th className="py-2">Action</th>
-                  <th className="py-2">Entity</th>
+                <tr>
+                  <th>When</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Entity</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((event) => {
                   const entityHref = getEntityHref(event.entityType, event.entityId);
                   return (
-                    <tr key={event.id} className="border-t border-border align-top">
-                      <td className="py-2">{new Date(event.createdAt).toLocaleString()}</td>
-                      <td className="py-2">{actorMap.get(event.actorId) || event.actorId}</td>
-                      <td className="py-2 font-mono text-xs">{event.action}</td>
-                      <td className="py-2">
+                    <tr key={event.id}>
+                      <td>{new Date(event.createdAt).toLocaleString()}</td>
+                      <td>{actorMap.get(event.actorId) || <code className="text-[11px] text-muted-foreground">{event.actorId}</code>}</td>
+                      <td><code className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">{event.action}</code></td>
+                      <td>
                         {entityHref ? (
-                          <Link href={entityHref} className="underline-offset-2 hover:underline">
-                            {event.entityType}
-                          </Link>
+                          <Link href={entityHref} className="font-medium hover:text-primary">{event.entityType}</Link>
                         ) : (
                           event.entityType
                         )}
-                        <div className="font-mono text-xs text-muted-foreground">{event.entityId}</div>
+                        <div className="text-[11px] text-muted-foreground">{event.entityId}</div>
                       </td>
                     </tr>
                   );
                 })}
-                {logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-muted-foreground">
-                      No activity found for the selected filters.
-                    </td>
-                  </tr>
-                ) : null}
+                {logs.length === 0 && (
+                  <tr><td colSpan={4} className="empty-state">No activity found for the selected filters.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

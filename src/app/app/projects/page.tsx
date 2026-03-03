@@ -8,7 +8,9 @@ import { MilestoneRowActions } from "@/components/projects/MilestoneRowActions";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { StatusPill } from "@/components/ui/status-pill";
+import { Paperclip } from "lucide-react";
 
 export default async function ProjectsPage() {
 	const session = await requireSession();
@@ -18,17 +20,8 @@ export default async function ProjectsPage() {
 		db.project.findMany({
 			where: { workspaceId: session.workspaceId },
 			include: {
-				client: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-				_count: {
-					select: {
-						tasks: true,
-					},
-				},
+				client: { select: { id: true, name: true } },
+				_count: { select: { tasks: true } },
 			},
 			orderBy: [{ updatedAt: "desc" }],
 			take: 200,
@@ -42,28 +35,18 @@ export default async function ProjectsPage() {
 		db.milestone.findMany({
 			where: { workspaceId: session.workspaceId },
 			include: {
-				project: {
-					select: {
-						id: true,
-						name: true,
-						keyPrefix: true,
-					},
-				},
+				project: { select: { id: true, name: true, keyPrefix: true } },
 			},
 			orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
 			take: 200,
 		}),
 	]);
 
-	const projectIds = projects.map((project) => project.id);
+	const projectIds = projects.map((p) => p.id);
 	const projectAttachmentLinks =
 		projectIds.length > 0
 			? await db.attachmentLink.findMany({
-					where: {
-						workspaceId: session.workspaceId,
-						entityType: "Project",
-						entityId: { in: projectIds },
-					},
+					where: { workspaceId: session.workspaceId, entityType: "Project", entityId: { in: projectIds } },
 					include: { attachment: true },
 					orderBy: { createdAt: "desc" },
 					take: 500,
@@ -73,161 +56,139 @@ export default async function ProjectsPage() {
 	const attachmentMap = new Map<string, typeof projectAttachmentLinks>();
 	for (const link of projectAttachmentLinks) {
 		const existing = attachmentMap.get(link.entityId);
-		if (existing) {
-			existing.push(link);
-		} else {
-			attachmentMap.set(link.entityId, [link]);
-		}
+		if (existing) existing.push(link);
+		else attachmentMap.set(link.entityId, [link]);
 	}
 
 	return (
-		<div className="space-y-5">
+		<div className="space-y-6">
 			<div>
-				<div className="text-xs font-semibold tracking-wider text-muted-foreground">DELIVERY</div>
-				<h1 className="mt-1 text-xl font-semibold">Projects</h1>
-				<p className="mt-1 text-sm text-muted-foreground">Workspace projects with key prefixes and scoped task context.</p>
+				<h1 className="text-lg font-semibold">Projects</h1>
+				<p className="text-sm text-muted-foreground">Workspace projects with key prefixes and scoped task context</p>
 			</div>
 
 			<CreateProjectForm clients={clients} />
 
 			<Card>
-				<CardHeader>
-					<CardTitle>Projects</CardTitle>
-				</CardHeader>
-				<CardContent className="overflow-x-auto">
-				<table className="w-full text-left text-sm">
-					<thead>
-						<tr className="text-muted-foreground">
-							<th className="py-2">Project</th>
-							<th className="py-2">Prefix</th>
-							<th className="py-2">Client</th>
-							<th className="py-2">Status</th>
-							<th className="py-2">Tasks</th>
-							<th className="py-2">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{projects.map((project) => (
-							<tr key={project.id} className="border-t border-border">
-								<td className="py-2 font-medium">{project.name}</td>
-								<td className="py-2">{project.keyPrefix}</td>
-								<td className="py-2">
-									<Link href={`/app/clients/${project.client.id}`}>{project.client.name}</Link>
-								</td>
-								<td className="py-2">{project.status}</td>
-								<td className="py-2">{project._count.tasks}</td>
-								<td className="min-w-[300px] py-2">
-									<ProjectRowActions
-										projectId={project.id}
-										name={project.name}
-										keyPrefix={project.keyPrefix}
-										status={project.status}
-									/>
-								</td>
-							</tr>
-						))}
-						{projects.length === 0 ? (
-							<tr>
-								<td colSpan={6} className="py-4 text-muted-foreground">
-									No projects yet.
-								</td>
-							</tr>
-						) : null}
-					</tbody>
-				</table>
+				<CardContent className="p-0">
+					<div className="overflow-x-auto">
+						<table className="data-table">
+							<thead>
+								<tr>
+									<th>Project</th>
+									<th>Prefix</th>
+									<th>Client</th>
+									<th>Status</th>
+									<th>Tasks</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{projects.map((project) => (
+									<tr key={project.id}>
+										<td className="font-medium">{project.name}</td>
+										<td><code className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">{project.keyPrefix}</code></td>
+										<td>
+											<Link href={`/app/clients/${project.client.id}`} className="text-foreground hover:text-primary">{project.client.name}</Link>
+										</td>
+										<td><StatusPill status={project.status} /></td>
+										<td>{project._count.tasks}</td>
+										<td className="min-w-[300px]">
+											<ProjectRowActions projectId={project.id} name={project.name} keyPrefix={project.keyPrefix} status={project.status} />
+										</td>
+									</tr>
+								))}
+								{projects.length === 0 && (
+									<tr><td colSpan={6} className="empty-state">No projects yet.</td></tr>
+								)}
+							</tbody>
+						</table>
+					</div>
 				</CardContent>
 			</Card>
 
-			<CreateMilestoneForm projects={projects.map((project) => ({ id: project.id, name: project.name, keyPrefix: project.keyPrefix }))} />
+			<CreateMilestoneForm projects={projects.map((p) => ({ id: p.id, name: p.name, keyPrefix: p.keyPrefix }))} />
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Milestones</CardTitle>
+					<CardTitle className="text-sm">Milestones</CardTitle>
 				</CardHeader>
-				<CardContent className="overflow-x-auto">
-				<table className="w-full text-left text-sm">
-					<thead>
-						<tr className="text-muted-foreground">
-							<th className="py-2">Milestone</th>
-							<th className="py-2">Project</th>
-							<th className="py-2">Due</th>
-							<th className="py-2">Status</th>
-							<th className="py-2">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{milestones.map((milestone) => (
-							<tr key={milestone.id} className="border-t border-border">
-								<td className="py-2 font-medium">{milestone.title}</td>
-								<td className="py-2">
-									{milestone.project.keyPrefix} · {milestone.project.name}
-								</td>
-								<td className="py-2">
-									{milestone.dueAt ? new Date(milestone.dueAt).toLocaleDateString() : "—"}
-								</td>
-								<td className="py-2">{milestone.status}</td>
-								<td className="min-w-[320px] py-2">
-									<MilestoneRowActions
-										milestoneId={milestone.id}
-										title={milestone.title}
-										dueAt={milestone.dueAt ? milestone.dueAt.toISOString() : null}
-										status={milestone.status}
-									/>
-								</td>
-							</tr>
-						))}
-						{milestones.length === 0 ? (
-							<tr>
-								<td colSpan={5} className="py-4 text-muted-foreground">
-									No milestones yet.
-								</td>
-							</tr>
-						) : null}
-					</tbody>
-				</table>
+				<CardContent className="p-0">
+					<div className="overflow-x-auto">
+						<table className="data-table">
+							<thead>
+								<tr>
+									<th>Milestone</th>
+									<th>Project</th>
+									<th>Due</th>
+									<th>Status</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{milestones.map((m) => (
+									<tr key={m.id}>
+										<td className="font-medium">{m.title}</td>
+										<td><code className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">{m.project.keyPrefix}</code> {m.project.name}</td>
+										<td>{m.dueAt ? new Date(m.dueAt).toLocaleDateString() : "—"}</td>
+										<td><StatusPill status={m.status} /></td>
+										<td className="min-w-[320px]">
+											<MilestoneRowActions milestoneId={m.id} title={m.title} dueAt={m.dueAt ? m.dueAt.toISOString() : null} status={m.status} />
+										</td>
+									</tr>
+								))}
+								{milestones.length === 0 && (
+									<tr><td colSpan={5} className="empty-state">No milestones yet.</td></tr>
+								)}
+							</tbody>
+						</table>
+					</div>
 				</CardContent>
 			</Card>
 
-			<section className="grid gap-3">
-				<h3 className="text-base font-semibold">Project attachments</h3>
-				{projects.length === 0 ? <div className="text-sm text-muted-foreground">Create a project to attach files.</div> : null}
-				{projects.map((project) => {
-					const links = attachmentMap.get(project.id) ?? [];
-					return (
-						<div key={project.id} className="rounded-md border border-border p-3">
-							<div className="mb-2 font-semibold">
-								{project.keyPrefix} · {project.name}
-							</div>
-							{canManageAttachments ? (
-								<UploadAttachmentForm entityType="Project" entityId={project.id} />
-							) : (
-								<div className="mb-2 text-sm text-muted-foreground">Only Admin/Owner roles can upload and link attachments.</div>
-							)}
-							<div className="mt-2 grid gap-2">
-								{links.slice(0, 20).map((link) => {
-									const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
-									return (
-										<div key={link.id} className="rounded-md border border-border p-3">
-											<div className="font-semibold">{link.label || link.attachment.fileName}</div>
-											<div className="mb-1 text-xs text-muted-foreground">
-												{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB
-											</div>
-											{canManageAttachments ? <AttachmentLinkActions linkId={link.id} /> : null}
-											{fileUrl ? (
-												<a href={fileUrl} target="_blank" rel="noreferrer">
-													Open attachment
-												</a>
-											) : (
-												<span className="text-sm text-muted-foreground">Storage public URL not configured</span>
-											)}
+			<section className="space-y-3">
+				<h2 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="h-4 w-4 text-muted-foreground" /> Project attachments</h2>
+				{projects.length === 0 && <div className="text-sm text-muted-foreground">Create a project to attach files.</div>}
+				<div className="grid gap-3">
+					{projects.map((project) => {
+						const links = attachmentMap.get(project.id) ?? [];
+						return (
+							<Card key={project.id}>
+								<CardHeader className="pb-2">
+									<CardTitle className="text-sm">{project.keyPrefix} · {project.name}</CardTitle>
+								</CardHeader>
+								<CardContent className="space-y-3">
+									{canManageAttachments ? (
+										<UploadAttachmentForm entityType="Project" entityId={project.id} />
+									) : (
+										<div className="text-xs text-muted-foreground">Only Admin/Owner roles can upload and link attachments.</div>
+									)}
+									{links.length > 0 ? (
+										<div className="grid gap-2">
+											{links.slice(0, 20).map((link) => {
+												const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+												return (
+													<div key={link.id} className="flex items-start justify-between rounded-md border border-border px-3 py-2">
+														<div>
+															<div className="text-sm font-medium">{link.label || link.attachment.fileName}</div>
+															<div className="text-[11px] text-muted-foreground">{link.attachment.fileName} · {link.attachment.mimeType} · {(link.attachment.sizeBytes / 1024).toFixed(1)} KB</div>
+														</div>
+														<div className="flex items-center gap-2">
+															{canManageAttachments && <AttachmentLinkActions linkId={link.id} />}
+															{fileUrl ? <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary hover:underline">Open</a> : <span className="text-[11px] text-muted-foreground">No public URL</span>}
+														</div>
+													</div>
+												);
+											})}
 										</div>
-									);
-								})}
-								{links.length === 0 ? <div className="text-sm text-muted-foreground">No project attachments yet.</div> : null}
-							</div>
-						</div>
-					);
-				})}
+									) : (
+										<div className="empty-state text-center">No project attachments yet.</div>
+									)}
+								</CardContent>
+							</Card>
+						);
+					})}
+				</div>
 			</section>
 		</div>
 	);

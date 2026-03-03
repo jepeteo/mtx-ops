@@ -1,7 +1,8 @@
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { NotificationActions } from "@/components/notifications/NotificationActions";
+import { StatusPill } from "@/components/ui/status-pill";
 import Link from "next/link";
 
 type Search = {
@@ -22,7 +23,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   const selectedTypeTab = selectedType ?? "ALL";
   const selectedStatusTab = selectedStatus ?? "ALL";
 
-  const typeTabs: Array<{ value: "ALL" | "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER"; label: string }> = [
+  const typeTabs: Array<{ value: string; label: string }> = [
     { value: "ALL", label: "All" },
     { value: "RENEWAL", label: "Renewals" },
     { value: "TASK", label: "Task due" },
@@ -30,15 +31,12 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     { value: "HANDOVER", label: "Handovers" },
   ];
 
-  const statusTabs: Array<{ value: "ALL" | "OPEN" | "SNOOZED" | "HANDLED"; label: string }> = [
+  const statusTabs: Array<{ value: string; label: string }> = [
     { value: "ALL", label: "All" },
     { value: "OPEN", label: "Open" },
     { value: "SNOOZED", label: "Snoozed" },
     { value: "HANDLED", label: "Handled" },
   ];
-
-  const tabClass = (active: boolean) =>
-    `rounded-md border px-2 py-1 text-xs ${active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground"}`;
 
   const buildHref = (nextType: string, nextStatus: string) => {
     const params = new URLSearchParams();
@@ -71,97 +69,71 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   ]);
 
   const typeCountMap = new Map<string, number>();
-  for (const row of typeCountsRaw) {
-    typeCountMap.set(row.type, row._count._all);
-  }
-
+  for (const row of typeCountsRaw) typeCountMap.set(row.type, row._count._all);
   const statusCountMap = new Map<string, number>();
-  for (const row of statusCountsRaw) {
-    statusCountMap.set(row.status, row._count._all);
-  }
-
-  const allTypeCount = typeCountsRaw.reduce((sum, row) => sum + row._count._all, 0);
-  const allStatusCount = statusCountsRaw.reduce((sum, row) => sum + row._count._all, 0);
+  for (const row of statusCountsRaw) statusCountMap.set(row.status, row._count._all);
+  const allTypeCount = typeCountsRaw.reduce((sum, r) => sum + r._count._all, 0);
+  const allStatusCount = statusCountsRaw.reduce((sum, r) => sum + r._count._all, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <div className="text-xs font-semibold tracking-wider text-muted-foreground">INBOX</div>
-        <h1 className="mt-1 text-xl font-semibold">Notifications</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Renewals, due dates, inactivity, and handovers.</p>
+        <h1 className="text-lg font-semibold">Notifications</h1>
+        <p className="text-sm text-muted-foreground">Renewals, due dates, inactivity, and handovers in one place</p>
+      </div>
+
+      <div className="flex flex-wrap items-start gap-6">
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-[.15em] text-muted-foreground">Type</div>
+          <div className="tab-bar">
+            {typeTabs.map((tab) => (
+              <Link key={tab.value} className={selectedTypeTab === tab.value ? "active" : ""} href={buildHref(tab.value, selectedStatusTab)}>
+                {tab.label} <span className="ml-0.5 text-muted-foreground">({tab.value === "ALL" ? allTypeCount : (typeCountMap.get(tab.value) ?? 0)})</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-[.15em] text-muted-foreground">Status</div>
+          <div className="tab-bar">
+            {statusTabs.map((tab) => (
+              <Link key={tab.value} className={selectedStatusTab === tab.value ? "active" : ""} href={buildHref(selectedTypeTab, tab.value)}>
+                {tab.label} <span className="ml-0.5 text-muted-foreground">({tab.value === "ALL" ? allStatusCount : (statusCountMap.get(tab.value) ?? 0)})</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Notification Center</CardTitle>
-          <CardDescription>Renewals, due dates, inactivity, and handovers in one place.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 space-y-3">
-            <div>
-              <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Type</div>
-              <div className="flex flex-wrap gap-2">
-                {typeTabs.map((tab) => (
-                  <Link
-                    key={tab.value}
-                    className={tabClass(selectedTypeTab === tab.value)}
-                    href={buildHref(tab.value, selectedStatusTab)}
-                  >
-                    {tab.label} ({tab.value === "ALL" ? allTypeCount : (typeCountMap.get(tab.value) ?? 0)})
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</div>
-              <div className="flex flex-wrap gap-2">
-                {statusTabs.map((tab) => (
-                  <Link
-                    key={tab.value}
-                    className={tabClass(selectedStatusTab === tab.value)}
-                    href={buildHref(selectedTypeTab, tab.value)}
-                  >
-                    {tab.label} ({tab.value === "ALL" ? allStatusCount : (statusCountMap.get(tab.value) ?? 0)})
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="data-table">
               <thead>
-                <tr className="text-muted-foreground">
-                  <th className="py-2">Type</th>
-                  <th className="py-2">Title</th>
-                  <th className="py-2">Due</th>
-                  <th className="py-2">Status</th>
-                  <th className="py-2">Actions</th>
+                <tr>
+                  <th>Type</th>
+                  <th>Title</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {notifications.map((notification) => (
-                  <tr key={notification.id} className="border-t border-border align-top">
-                    <td className="py-2">{notification.type}</td>
-                    <td className="py-2">
-                      <div className="font-medium">{notification.title}</div>
-                      <div className="text-muted-foreground">{notification.message}</div>
+                {notifications.map((n) => (
+                  <tr key={n.id} className="align-top">
+                    <td><span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">{n.type}</span></td>
+                    <td>
+                      <div className="font-medium">{n.title}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{n.message}</div>
                     </td>
-                    <td className="py-2">{new Date(notification.dueAt).toLocaleDateString()}</td>
-                    <td className="py-2">{notification.status}</td>
-                    <td className="py-2">
-                      <NotificationActions notificationId={notification.id} status={notification.status} />
-                    </td>
+                    <td>{new Date(n.dueAt).toLocaleDateString()}</td>
+                    <td><StatusPill status={n.status} /></td>
+                    <td><NotificationActions notificationId={n.id} status={n.status} /></td>
                   </tr>
                 ))}
-                {notifications.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-4 text-muted-foreground">
-                      No notifications yet.
-                    </td>
-                  </tr>
-                ) : null}
+                {notifications.length === 0 && (
+                  <tr><td colSpan={5} className="empty-state">No notifications yet.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

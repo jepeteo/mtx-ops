@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { RunAttachmentCleanupButton } from "@/components/admin/RunAttachmentCleanupButton";
 import { AutoClearCleanupStatus } from "@/components/admin/AutoClearCleanupStatus";
+import { Trash2, AlertTriangle, BarChart3, Clock } from "lucide-react";
 
 type MetadataMap = Record<string, unknown>;
 
@@ -152,233 +153,173 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
 
   const clearStatusHref = buildFilterHref(selectedRange, selectedView);
 
-  const tabClass = (active: boolean) =>
-    `rounded-md border px-3 py-1 ${active ? "border-foreground bg-secondary" : "border-border"}`;
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <AutoClearCleanupStatus delayMs={10000} />
 
       <div>
-        <div className="text-xs font-semibold tracking-wider text-muted-foreground">ADMIN</div>
-        <h1 className="mt-1 text-xl font-semibold">Operations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Attachment cleanup runs and storage-delete failure signals from ActivityLog.</p>
+        <h1 className="text-lg font-semibold">Operations</h1>
+        <p className="text-sm text-muted-foreground">Attachment cleanup runs and storage-delete failure signals</p>
       </div>
 
-      <div className="flex gap-2 text-sm">
-        <Link className="rounded-md border border-border px-3 py-1" href="/app/admin/users">
-          Users
-        </Link>
-        <Link className="rounded-md border border-foreground bg-secondary px-3 py-1" href="/app/admin/operations">
-          Operations
-        </Link>
-        <Link className="rounded-md border border-border px-3 py-1" href="/app/admin/activity">
-          Activity
-        </Link>
-      </div>
+      <nav className="tab-bar">
+        <Link href="/app/admin/users">Users</Link>
+        <Link href="/app/admin/operations" className="active">Operations</Link>
+        <Link href="/app/admin/activity">Activity</Link>
+      </nav>
 
-      {cleanupRun === "ok" ? (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+      {cleanupRun === "ok" && (
+        <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-2.5 text-sm text-success">
           Cleanup completed: scanned {cleanupScanned}, deleted {cleanupDeleted}, failed {cleanupFailed}.{" "}
-          <Link href={clearStatusHref} className="underline underline-offset-2">
-            Clear status
-          </Link>
-          <span className="ml-2 text-xs text-emerald-700">Auto-clears in 10s</span>
+          <Link href={clearStatusHref} className="underline underline-offset-2">Clear status</Link>
+          <span className="ml-2 text-xs opacity-75">Auto-clears in 10s</span>
         </div>
-      ) : null}
+      )}
 
-      {cleanupRun === "error" ? (
-        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+      {cleanupRun === "error" && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
           Cleanup failed: {cleanupMessage}.{" "}
-          <Link href={clearStatusHref} className="underline underline-offset-2">
-            Clear status
-          </Link>
-          <span className="ml-2 text-xs text-red-700">Auto-clears in 10s</span>
+          <Link href={clearStatusHref} className="underline underline-offset-2">Clear status</Link>
+          <span className="ml-2 text-xs opacity-75">Auto-clears in 10s</span>
         </div>
-      ) : null}
+      )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="flex items-center justify-between p-5">
+          <div>
+            <div className="text-sm font-medium">Manual cleanup</div>
+            <div className="text-xs text-muted-foreground">Run attachment orphan cleanup now</div>
+          </div>
           <RunAttachmentCleanupButton />
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Range</div>
-            <div className="flex flex-wrap gap-2 text-sm">
-              {(["24h", "7d", "30d", "all"] as const).map((range) => (
-                <Link
-                  key={range}
-                  className={tabClass(selectedRange === range)}
-                  href={buildFilterHref(range, selectedView)}
-                >
-                  {range}
-                </Link>
-              ))}
-            </div>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-6">
+        <div>
+          <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Range</div>
+          <div className="tab-bar">
+            {(["24h", "7d", "30d", "all"] as const).map((range) => (
+              <Link key={range} className={selectedRange === range ? "active" : ""} href={buildFilterHref(range, selectedView)}>{range}</Link>
+            ))}
           </div>
-          <div>
-            <div className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">View</div>
-            <div className="flex flex-wrap gap-2 text-sm">
-              {(["all", "cleanup", "failures"] as const).map((view) => (
-                <Link
-                  key={view}
-                  className={tabClass(selectedView === view)}
-                  href={buildFilterHref(selectedRange, view)}
-                >
-                  {view}
-                </Link>
-              ))}
-            </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">View</div>
+          <div className="tab-bar">
+            {(["all", "cleanup", "failures"] as const).map((view) => (
+              <Link key={view} className={selectedView === view ? "active" : ""} href={buildFilterHref(selectedRange, view)}>{view}</Link>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-3 md:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Cleanup Events</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{cleanupEvents.length}</div>
-            <div className="text-xs text-muted-foreground">In selected range</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Storage Failures</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-red-600">{cleanupFailures.length}</div>
-            <div className="text-xs text-muted-foreground">In selected range</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Failure Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{failureRate}%</div>
-            <div className="text-xs text-muted-foreground">From {unlinkEventsInRange} unlink events</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Last Cleanup Run</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {latestCleanup ? (
-              <>
-                <div className="text-sm font-medium">{new Date(latestCleanup.createdAt).toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">{latestCleanup.fileName}</div>
-                <div className="text-xs text-muted-foreground font-mono">{latestCleanup.actorId}</div>
-              </>
-            ) : (
-              <div className="text-xs text-muted-foreground">No cleanup activity recorded yet.</div>
-            )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
-      {selectedView === "all" || selectedView === "cleanup" ? (
-      <Card>
-        <CardHeader>
-          <CardTitle>Attachment cleanup events ({cleanupEvents.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-muted-foreground">
-                  <th className="py-2">When</th>
-                  <th className="py-2">Attachment</th>
-                  <th className="py-2">File</th>
-                  <th className="py-2">Actor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cleanupEvents.map((event) => (
-                  <tr key={event.id} className="border-t border-border align-top">
-                    <td className="py-2">{new Date(event.createdAt).toLocaleString()}</td>
-                    <td className="py-2 font-mono text-xs">{event.attachmentId}</td>
-                    <td className="py-2">{event.fileName}</td>
-                    <td className="py-2 font-mono text-xs">{event.actorId}</td>
-                  </tr>
-                ))}
-                {cleanupEvents.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-muted-foreground">
-                      No cleanup events yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-      ) : null}
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Cleanup Events", value: cleanupEvents.length, icon: Trash2, color: "text-primary", bg: "bg-primary/10", sub: "In selected range" },
+          { label: "Storage Failures", value: cleanupFailures.length, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", sub: "In selected range" },
+          { label: "Failure Rate", value: `${failureRate}%`, icon: BarChart3, color: "text-warning", bg: "bg-warning/10", sub: `From ${unlinkEventsInRange} unlink events` },
+          { label: "Last Cleanup", value: latestCleanup ? new Date(latestCleanup.createdAt).toLocaleDateString() : "—", icon: Clock, color: "text-info", bg: "bg-info/10", sub: latestCleanup ? latestCleanup.fileName : "No runs yet" },
+        ].map((s) => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label}>
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.bg}`}>
+                  <Icon className={`h-5 w-5 ${s.color}`} />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold tracking-tight">{s.value}</div>
+                  <div className="text-xs text-muted-foreground">{s.sub}</div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-      {selectedView === "all" || selectedView === "failures" ? (
-      <Card>
-        <CardHeader>
-          <CardTitle>Storage delete failures ({cleanupFailures.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-muted-foreground">
-                  <th className="py-2">When</th>
-                  <th className="py-2">Attachment</th>
-                  <th className="py-2">Entity</th>
-                  <th className="py-2">Error</th>
-                  <th className="py-2">Actor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cleanupFailures.map((event) => (
-                  <tr key={event.id} className="border-t border-border align-top">
-                    <td className="py-2">{new Date(event.createdAt).toLocaleString()}</td>
-                    <td className="py-2">
-                      <div className="font-mono text-xs">{event.attachmentId}</div>
-                      <div className="text-muted-foreground">{event.fileName}</div>
-                    </td>
-                    <td className="py-2">
-                      {event.entityHref && event.entityType ? (
-                        <Link href={event.entityHref} className="underline-offset-2 hover:underline">
-                          {event.entityType}
-                        </Link>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                      {event.entityId ? <div className="font-mono text-xs text-muted-foreground">{event.entityId}</div> : null}
-                    </td>
-                    <td className="py-2 text-red-600">{event.storageDeleteError}</td>
-                    <td className="py-2 font-mono text-xs">{event.actorId}</td>
-                  </tr>
-                ))}
-                {cleanupFailures.length === 0 ? (
+      {(selectedView === "all" || selectedView === "cleanup") && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="border-b border-border px-5 py-3">
+              <div className="text-sm font-medium">Attachment cleanup events ({cleanupEvents.length})</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} className="py-4 text-muted-foreground">
-                      No storage delete failures detected in ActivityLog.
-                    </td>
+                    <th>When</th>
+                    <th>Attachment</th>
+                    <th>File</th>
+                    <th>Actor</th>
                   </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-      ) : null}
+                </thead>
+                <tbody>
+                  {cleanupEvents.map((event) => (
+                    <tr key={event.id}>
+                      <td>{new Date(event.createdAt).toLocaleString()}</td>
+                      <td><code className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">{event.attachmentId}</code></td>
+                      <td>{event.fileName}</td>
+                      <td><code className="text-[11px] text-muted-foreground">{event.actorId}</code></td>
+                    </tr>
+                  ))}
+                  {cleanupEvents.length === 0 && (
+                    <tr><td colSpan={4} className="empty-state">No cleanup events yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {(selectedView === "all" || selectedView === "failures") && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="border-b border-border px-5 py-3">
+              <div className="text-sm font-medium">Storage delete failures ({cleanupFailures.length})</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Attachment</th>
+                    <th>Entity</th>
+                    <th>Error</th>
+                    <th>Actor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cleanupFailures.map((event) => (
+                    <tr key={event.id}>
+                      <td>{new Date(event.createdAt).toLocaleString()}</td>
+                      <td>
+                        <code className="rounded bg-secondary px-1.5 py-0.5 text-[11px]">{event.attachmentId}</code>
+                        <div className="mt-0.5 text-muted-foreground">{event.fileName}</div>
+                      </td>
+                      <td>
+                        {event.entityHref && event.entityType ? (
+                          <Link href={event.entityHref} className="font-medium hover:text-primary">{event.entityType}</Link>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                        {event.entityId && <div className="text-[11px] text-muted-foreground">{event.entityId}</div>}
+                      </td>
+                      <td className="text-destructive">{event.storageDeleteError}</td>
+                      <td><code className="text-[11px] text-muted-foreground">{event.actorId}</code></td>
+                    </tr>
+                  ))}
+                  {cleanupFailures.length === 0 && (
+                    <tr><td colSpan={5} className="empty-state">No storage delete failures detected.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
