@@ -4,38 +4,54 @@
 
 @layer base {
   :root {
-    --radius: 12px;
-    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --radius: 10px;
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, sans-serif;
 
-    /* Dark, serious default */
-    --background: 215 35% 6%; /* ~#0B0F14 */
-    --foreground: 210 25% 94%; /* ~#E6EDF6 */
+    /* ── Refined dark palette ── */
+    --background: 220 20% 4%;        /* #090B10 deep charcoal      */
+    --foreground: 220 15% 90%;       /* #DDE1E9 crisp light gray   */
 
-    --card: 214 35% 9%; /* ~#0F1620 */
-    --card-foreground: 210 25% 94%;
+    --card: 220 18% 7%;              /* #0F1218 elevated surface    */
+    --card-foreground: 220 15% 90%;
 
-    --popover: 214 35% 9%;
-    --popover-foreground: 210 25% 94%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 220 15% 90%;
 
-    /* Accent = MTX primary #1C2C4C (approximated in HSL) */
-    --primary: 218 46% 20%;
-    --primary-foreground: 210 25% 96%;
+    /* Blue-indigo primary */
+    --primary: 225 65% 55%;          /* #4F6DDB vibrant blue        */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 216 30% 12%; /* ~#111C28-ish */
-    --secondary-foreground: 210 25% 94%;
+    --secondary: 220 16% 11%;        /* #171B22 subtle surface      */
+    --secondary-foreground: 220 15% 88%;
 
-    --muted: 216 30% 12%;
-    --muted-foreground: 214 15% 68%; /* ~#9AA9BC */
+    --muted: 220 14% 13%;
+    --muted-foreground: 220 10% 55%; /* #7E8594 medium gray         */
 
-    --accent: 218 46% 20%;
-    --accent-foreground: 210 25% 96%;
+    --accent: 225 65% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 25% 96%;
+    --destructive: 0 72% 51%;        /* bright red for real danger  */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 215 28% 16%; /* ~#1A2736 */
-    --input: 215 28% 16%;
-    --ring: 218 46% 20%;
+    --border: 220 14% 14%;           /* #1E2128 subtle dividers     */
+    --input: 220 14% 14%;
+    --ring: 225 65% 55%;
+
+    /* ── Semantic status colors ── */
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 8%;
+    --info: 210 80% 56%;
+    --info-foreground: 0 0% 100%;
+
+    /* ── Sidebar ── */
+    --sidebar: 220 20% 5%;
+    --sidebar-foreground: 220 10% 60%;
+    --sidebar-active: 225 65% 55%;
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-hover: 220 16% 11%;
   }
 
   html, body {
@@ -44,5 +60,107 @@
 
   body {
     @apply bg-background text-foreground antialiased font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* ── Shared utility layers ── */
+@layer components {
+  /* Page header pattern */
+  .page-header {
+    @apply mb-6;
+  }
+  .page-header .page-label {
+    @apply text-[10px] font-bold uppercase tracking-[.15em] text-muted-foreground;
+  }
+  .page-header h1 {
+    @apply mt-1 text-2xl font-semibold tracking-tight;
+  }
+  .page-header .page-desc {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  /* Data table pattern */
+  .data-table {
+    @apply w-full text-left text-sm;
+  }
+  .data-table thead th {
+    @apply border-b border-border px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground;
+  }
+  .data-table tbody td {
+    @apply border-b border-border/50 px-4 py-2.5;
+  }
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-secondary/50;
+  }
+
+  /* Stat card mini */
+  .stat-card {
+    @apply rounded-lg border border-border bg-card p-5;
+  }
+  .stat-card .stat-label {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+  .stat-card .stat-value {
+    @apply mt-1 text-2xl font-bold tabular-nums tracking-tight;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    @apply flex gap-1;
+  }
+  .tab-bar a, .tab-bar button {
+    @apply rounded-md px-3 py-1.5 text-xs font-medium transition-colors;
+  }
+  .tab-bar .tab-active {
+    @apply bg-primary text-primary-foreground;
+  }
+  .tab-bar .tab-inactive {
+    @apply text-muted-foreground hover:bg-secondary hover:text-foreground;
+  }
+
+  /* Status pill */
+  .status-pill {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide;
+  }
+  .status-pill-active   { @apply bg-emerald-500/15 text-emerald-400; }
+  .status-pill-paused   { @apply bg-amber-500/15 text-amber-400; }
+  .status-pill-archived  { @apply bg-zinc-500/15 text-zinc-400; }
+  .status-pill-canceled  { @apply bg-red-500/15 text-red-400; }
+  .status-pill-unknown   { @apply bg-purple-500/15 text-purple-400; }
+  .status-pill-todo      { @apply bg-sky-500/15 text-sky-400; }
+  .status-pill-in-progress { @apply bg-blue-500/15 text-blue-400; }
+  .status-pill-blocked   { @apply bg-red-500/15 text-red-400; }
+  .status-pill-done      { @apply bg-emerald-500/15 text-emerald-400; }
+  .status-pill-open      { @apply bg-amber-500/15 text-amber-400; }
+  .status-pill-snoozed   { @apply bg-purple-500/15 text-purple-400; }
+  .status-pill-handled   { @apply bg-zinc-500/15 text-zinc-400; }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center text-sm text-muted-foreground;
+  }
+
+  /* Inline form row */
+  .form-row {
+    @apply grid gap-3;
+  }
+  .form-label {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+  .form-input {
+    @apply h-9 w-full rounded-md border border-border bg-secondary/40 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50;
+  }
+  .form-select {
+    @apply h-9 w-full rounded-md border border-border bg-secondary/40 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50;
+  }
+  .form-textarea {
+    @apply w-full rounded-md border border-border bg-secondary/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50;
+  }
+  .form-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .form-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:pointer-events-none disabled:opacity-50;
   }
 }
