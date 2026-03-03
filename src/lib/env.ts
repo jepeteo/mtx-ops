@@ -17,6 +17,10 @@ const EnvSchema = z.object({
   STORAGE_PUBLIC_BASE_URL: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   VAULTWARDEN_URL: z.string().optional(),
+  VAULTWARDEN_EMAIL: z.preprocess((v) => v || undefined, z.string().email().optional()),
+  VAULTWARDEN_MASTER_PASSWORD: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
+  VAULTWARDEN_CLIENT_ID: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
+  VAULTWARDEN_CLIENT_SECRET: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
 });
 
 export const env = EnvSchema.parse({
@@ -36,4 +40,8 @@ export const env = EnvSchema.parse({
   STORAGE_PUBLIC_BASE_URL: process.env.STORAGE_PUBLIC_BASE_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   VAULTWARDEN_URL: process.env.VAULTWARDEN_URL,
+  VAULTWARDEN_EMAIL: process.env.VAULTWARDEN_EMAIL,
+  VAULTWARDEN_MASTER_PASSWORD: process.env.VAULTWARDEN_MASTER_PASSWORD,
+  VAULTWARDEN_CLIENT_ID: process.env.VAULTWARDEN_CLIENT_ID,
+  VAULTWARDEN_CLIENT_SECRET: process.env.VAULTWARDEN_CLIENT_SECRET,
 });
