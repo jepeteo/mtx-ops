@@ -77,22 +77,22 @@ export function MilestoneRowActions({
   }
 
   return (
-    <div style={{ display: "grid", gap: 4 }}>
-      <input value={nextTitle} onChange={(event) => setNextTitle(event.target.value)} style={{ padding: 6, fontSize: 12 }} />
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type="date" value={nextDueAt} onChange={(event) => setNextDueAt(event.target.value)} style={{ padding: 6 }} />
-        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as MilestoneStatus)} style={{ padding: 6 }}>
+    <div className="grid gap-1.5">
+      <input value={nextTitle} onChange={(event) => setNextTitle(event.target.value)} className="form-input h-7 text-xs" />
+      <div className="flex items-center gap-1.5">
+        <input type="date" value={nextDueAt} onChange={(event) => setNextDueAt(event.target.value)} className="form-input h-7 text-xs" />
+        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as MilestoneStatus)} className="form-select h-7 text-xs">
           <option value="OPEN">OPEN</option>
           <option value="DONE">DONE</option>
         </select>
-        <button type="button" onClick={saveMilestone} disabled={saving}>
+        <button type="button" onClick={saveMilestone} disabled={saving} className="form-btn h-7 px-2.5 text-xs">
           Save
         </button>
-        <button type="button" onClick={deleteMilestone} disabled={saving} style={{ color: "#b91c1c" }}>
+        <button type="button" onClick={deleteMilestone} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
           Delete
         </button>
       </div>
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

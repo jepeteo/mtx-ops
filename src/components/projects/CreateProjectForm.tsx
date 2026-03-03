@@ -57,15 +57,13 @@ export function CreateProjectForm({ clients }: { clients: ClientOption[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 720 }}>
-      <div style={{ fontWeight: 600 }}>New project</div>
+    <form onSubmit={onSubmit} className="grid max-w-[720px] gap-3 rounded-lg border border-border bg-card p-5">
+      <div className="text-sm font-semibold">New project</div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select value={clientId} onChange={(event) => setClientId(event.target.value)} style={{ padding: 8 }}>
+      <div className="grid grid-cols-2 gap-3">
+        <select value={clientId} onChange={(event) => setClientId(event.target.value)} className="form-select">
           {clients.map((client) => (
-            <option key={client.id} value={client.id}>
-              {client.name}
-            </option>
+            <option key={client.id} value={client.id}>{client.name}</option>
           ))}
         </select>
 
@@ -74,20 +72,20 @@ export function CreateProjectForm({ clients }: { clients: ClientOption[] }) {
           onChange={(event) => setName(event.target.value)}
           placeholder="Project name"
           required
-          style={{ padding: 8 }}
+          className="form-input"
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div className="grid grid-cols-2 gap-3">
         <input
           value={keyPrefix}
           onChange={(event) => setKeyPrefix(event.target.value.toUpperCase())}
           placeholder="Key prefix (e.g. MTXCF)"
           required
-          style={{ padding: 8 }}
+          className="form-input"
         />
 
-        <select value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus)} style={{ padding: 8 }}>
+        <select value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus)} className="form-select">
           <option value="ACTIVE">ACTIVE</option>
           <option value="ON_HOLD">ON_HOLD</option>
           <option value="COMPLETED">COMPLETED</option>
@@ -95,11 +93,11 @@ export function CreateProjectForm({ clients }: { clients: ClientOption[] }) {
         </select>
       </div>
 
-      <button type="submit" disabled={saving} style={{ width: 160 }}>
-        {saving ? "Saving..." : "Create project"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create project"}
       </button>
 
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

@@ -45,42 +45,24 @@ export function CreateUserForm() {
   }
 
   return (
-    <form className="grid gap-3 rounded-md border border-border bg-card p-4" onSubmit={onSubmit}>
-      <div className="text-sm font-medium">Create user</div>
+    <form className="grid gap-3 rounded-lg border border-border bg-card p-5" onSubmit={onSubmit}>
+      <div className="text-sm font-semibold">Create user</div>
 
-      <Input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input type="email" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+        <Input placeholder="Name (optional)" value={name} onChange={(event) => setName(event.target.value)} />
+        <Input type="password" placeholder="Temporary password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required />
+        <select className="form-select" value={role} onChange={(event) => setRole(event.target.value as Role)}>
+          <option value="MEMBER">Member</option>
+          <option value="ADMIN">Admin</option>
+          <option value="OWNER">Owner</option>
+        </select>
+      </div>
 
-      <Input placeholder="Name (optional)" value={name} onChange={(event) => setName(event.target.value)} />
+      {error ? <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">{error}</div> : null}
 
-      <Input
-        type="password"
-        placeholder="Temporary password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        minLength={8}
-        required
-      />
-
-      <select
-        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-        value={role}
-        onChange={(event) => setRole(event.target.value as Role)}
-      >
-        <option value="MEMBER">Member</option>
-        <option value="ADMIN">Admin</option>
-        <option value="OWNER">Owner</option>
-      </select>
-
-      {error ? <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}
-
-      <Button type="submit" disabled={saving}>
-        {saving ? "Creating..." : "Create user"}
+      <Button type="submit" disabled={saving} className="w-fit">
+        {saving ? "Creating…" : "Create user"}
       </Button>
     </form>
   );

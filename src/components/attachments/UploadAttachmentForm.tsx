@@ -96,27 +96,27 @@ export function UploadAttachmentForm({ entityType, entityId }: { entityType: Ent
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 720 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+    <form onSubmit={onSubmit} className="grid max-w-[720px] gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <input
           type="file"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          style={{ padding: 8 }}
+          className="form-input text-xs file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary"
           required
         />
         <input
           value={label}
           onChange={(event) => setLabel(event.target.value)}
           placeholder="Optional label"
-          style={{ padding: 8 }}
+          className="form-input"
         />
       </div>
 
-      <button type="submit" disabled={saving} style={{ width: 170 }}>
-        {saving ? "Uploading..." : "Upload attachment"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Uploading…" : "Upload attachment"}
       </button>
 
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

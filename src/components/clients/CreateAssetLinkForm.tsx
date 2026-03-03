@@ -44,48 +44,19 @@ export function CreateAssetLinkForm({ clientId }: { clientId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 640, marginBottom: 12 }}>
-      <div style={{ fontWeight: 600 }}>Add asset/link</div>
-      <input
-        placeholder="Label (e.g. Production Repo)"
-        value={label}
-        onChange={(event) => setLabel(event.target.value)}
-        required
-        style={{ padding: 8 }}
-      />
-      <input
-        placeholder="URL"
-        type="url"
-        value={url}
-        onChange={(event) => setUrl(event.target.value)}
-        required
-        style={{ padding: 8 }}
-      />
-      <input
-        placeholder="Kind (e.g. repo, wp_admin, hosting_panel)"
-        value={kind}
-        onChange={(event) => setKind(event.target.value)}
-        required
-        style={{ padding: 8 }}
-      />
-      <input
-        placeholder="Environment (optional, e.g. prod, stage)"
-        value={environment}
-        onChange={(event) => setEnvironment(event.target.value)}
-        style={{ padding: 8 }}
-      />
-      <input
-        placeholder="Tags (optional, comma-separated)"
-        value={tags}
-        onChange={(event) => setTags(event.target.value)}
-        style={{ padding: 8 }}
-      />
+    <form onSubmit={onSubmit} className="mb-3 grid max-w-[640px] gap-3 rounded-lg border border-border bg-card p-5">
+      <div className="text-sm font-semibold">Add asset/link</div>
+      <input placeholder="Label (e.g. Production Repo)" value={label} onChange={(event) => setLabel(event.target.value)} required className="form-input" />
+      <input placeholder="URL" type="url" value={url} onChange={(event) => setUrl(event.target.value)} required className="form-input" />
+      <input placeholder="Kind (e.g. repo, wp_admin, hosting_panel)" value={kind} onChange={(event) => setKind(event.target.value)} required className="form-input" />
+      <input placeholder="Environment (optional, e.g. prod, stage)" value={environment} onChange={(event) => setEnvironment(event.target.value)} className="form-input" />
+      <input placeholder="Tags (optional, comma-separated)" value={tags} onChange={(event) => setTags(event.target.value)} className="form-input" />
 
-      <button type="submit" disabled={saving} style={{ width: 180 }}>
-        {saving ? "Saving..." : "Create asset link"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create asset link"}
       </button>
 
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

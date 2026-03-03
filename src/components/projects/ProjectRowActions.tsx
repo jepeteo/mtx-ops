@@ -84,37 +84,37 @@ export function ProjectRowActions({
   }
 
   return (
-    <div style={{ display: "grid", gap: 4 }}>
+    <div className="grid gap-1.5">
       <input
         value={nextName}
         onChange={(event) => setNextName(event.target.value)}
         placeholder="Project name"
-        style={{ padding: 6, fontSize: 12 }}
+        className="form-input h-7 text-xs"
       />
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      <div className="flex items-center gap-1.5">
         <input
           value={nextKeyPrefix}
           onChange={(event) => setNextKeyPrefix(event.target.value.toUpperCase())}
           placeholder="Prefix"
-          style={{ width: 110, padding: 6, fontSize: 12 }}
+          className="form-input h-7 w-[110px] text-xs"
         />
 
-        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ProjectStatus)} style={{ padding: 6 }}>
+        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ProjectStatus)} className="form-select h-7 text-xs">
           <option value="ACTIVE">ACTIVE</option>
           <option value="ON_HOLD">ON_HOLD</option>
           <option value="COMPLETED">COMPLETED</option>
           <option value="ARCHIVED">ARCHIVED</option>
         </select>
 
-        <button type="button" onClick={saveProject} disabled={saving}>
+        <button type="button" onClick={saveProject} disabled={saving} className="form-btn h-7 px-2.5 text-xs">
           Save
         </button>
 
-        <button type="button" onClick={deleteProject} disabled={saving} style={{ color: "#b91c1c" }}>
+        <button type="button" onClick={deleteProject} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
           Delete
         </button>
       </div>
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

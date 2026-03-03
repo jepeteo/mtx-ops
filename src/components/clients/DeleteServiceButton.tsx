@@ -27,8 +27,8 @@ export function DeleteServiceButton({ serviceId }: { serviceId: string }) {
   }
 
   return (
-    <button type="button" onClick={onDelete} disabled={loading} style={{ color: "#b91c1c" }}>
-      {loading ? "Deleting..." : "Delete"}
+    <button type="button" onClick={onDelete} disabled={loading} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
+      {loading ? "Deleting…" : "Delete"}
     </button>
   );
 }

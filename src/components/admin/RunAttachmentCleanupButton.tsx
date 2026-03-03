@@ -71,16 +71,16 @@ export function RunAttachmentCleanupButton() {
         type="button"
         disabled={running}
         onClick={runCleanup}
-        className="w-fit rounded-md border border-border px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60"
+        className="form-btn w-fit"
       >
-        {running ? "Running cleanup..." : "Run Attachment Cleanup Now"}
+        {running ? "Running cleanup…" : "Run Attachment Cleanup Now"}
       </button>
       {result ? (
         <div className="text-xs text-muted-foreground">
           Done: scanned {result.scanned}, deleted {result.deleted}, failed {result.failed}
         </div>
       ) : null}
-      {error ? <div className="text-xs text-red-600">{error}</div> : null}
+      {error ? <div className="text-xs text-destructive">{error}</div> : null}
     </div>
   );
 }

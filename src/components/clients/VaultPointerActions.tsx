@@ -149,47 +149,47 @@ export function VaultPointerActions({
   }
 
   return (
-    <div style={{ display: "grid", gap: 6, border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-        <input value={label} onChange={(event) => setLabel(event.target.value)} style={{ padding: 6 }} />
-        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} style={{ padding: 6 }} />
+    <div className="grid gap-2 rounded-lg border border-border p-3">
+      <div className="grid grid-cols-2 gap-2">
+        <input value={label} onChange={(event) => setLabel(event.target.value)} className="form-input h-7 text-xs" />
+        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} className="form-input h-7 text-xs" />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} style={{ padding: 6 }} />
-        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint" style={{ padding: 6 }} />
+      <div className="grid grid-cols-2 gap-2">
+        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} className="form-input h-7 text-xs" />
+        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint" className="form-input h-7 text-xs" />
       </div>
 
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <button type="button" onClick={savePointer} disabled={saving}>
+      <div className="flex items-center gap-1.5">
+        <button type="button" onClick={savePointer} disabled={saving} className="form-btn h-7 px-2.5 text-xs">
           Save
         </button>
-        <button type="button" onClick={revealSecret} disabled={saving}>
+        <button type="button" onClick={revealSecret} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs">
           Reveal
         </button>
-        <button type="button" onClick={deletePointer} disabled={saving} style={{ color: "#b91c1c" }}>
+        <button type="button" onClick={deletePointer} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
           Delete
         </button>
       </div>
 
       {revealedValue !== null ? (
-        <div style={{ display: "grid", gap: 6 }}>
-          <div style={{ fontFamily: "monospace", fontSize: 12, wordBreak: "break-all" }}>
+        <div className="grid gap-2 rounded-md bg-secondary/40 p-3">
+          <div className="break-all font-mono text-xs">
             {isSecretVisible ? revealedValue : "••••••••••••••••"}
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <button type="button" onClick={() => setIsSecretVisible((value) => !value)} disabled={saving}>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setIsSecretVisible((value) => !value)} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs">
               {isSecretVisible ? "Mask" : "Show"}
             </button>
-            <button type="button" onClick={copySecret} disabled={saving}>
+            <button type="button" onClick={copySecret} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs">
               Copy
             </button>
-            <span style={{ color: "#666", fontSize: 12 }}>{copyStatus ?? ""}</span>
+            <span className="text-xs text-muted-foreground">{copyStatus ?? ""}</span>
           </div>
-          <div style={{ color: "#666", fontSize: 12 }}>Revealed value is not persisted or written to ActivityLog.</div>
+          <div className="text-xs text-muted-foreground">Revealed value is not persisted or written to ActivityLog.</div>
         </div>
       ) : null}
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

@@ -45,17 +45,12 @@ export function UpdateServiceReminderRules({ serviceId, initialRules }: { servic
   }
 
   return (
-    <div style={{ display: "grid", gap: 4, minWidth: 190 }}>
-      <input
-        value={rawRules}
-        onChange={(event) => setRawRules(event.target.value)}
-        placeholder="60,30,14,7"
-        style={{ padding: 6, fontSize: 12 }}
-      />
-      <button type="button" onClick={onSave} disabled={loading} style={{ fontSize: 12 }}>
-        {loading ? "Saving..." : "Save reminders"}
+    <div className="grid min-w-[190px] gap-1.5">
+      <input value={rawRules} onChange={(event) => setRawRules(event.target.value)} placeholder="60,30,14,7" className="form-input h-7 text-xs" />
+      <button type="button" onClick={onSave} disabled={loading} className="form-btn h-7 px-2.5 text-xs">
+        {loading ? "Saving…" : "Save reminders"}
       </button>
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

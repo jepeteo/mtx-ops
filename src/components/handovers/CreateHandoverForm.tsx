@@ -60,13 +60,13 @@ export function CreateHandoverForm({
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
+    <form onSubmit={onSubmit} className="grid gap-3">
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="Handover title"
         required
-        style={{ width: "100%", padding: 8 }}
+        className="form-input"
       />
 
       <textarea
@@ -75,21 +75,19 @@ export function CreateHandoverForm({
         rows={3}
         placeholder="What should the next person know and do?"
         required
-        style={{ width: "100%", padding: 8 }}
+        className="form-textarea"
       />
 
-      <select value={toUserId} onChange={(event) => setToUserId(event.target.value)} style={{ padding: 8 }}>
+      <select value={toUserId} onChange={(event) => setToUserId(event.target.value)} className="form-select">
         {users.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.label}
-          </option>
+          <option key={user.id} value={user.id}>{user.label}</option>
         ))}
       </select>
 
-      <button type="submit" disabled={saving} style={{ width: 150 }}>
-        {saving ? "Saving..." : "Create handover"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create handover"}
       </button>
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

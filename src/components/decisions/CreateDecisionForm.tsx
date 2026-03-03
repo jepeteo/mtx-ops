@@ -40,13 +40,13 @@ export function CreateDecisionForm({ entityType, entityId }: { entityType: Entit
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
+    <form onSubmit={onSubmit} className="grid gap-3">
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="Decision title"
         required
-        style={{ width: "100%", padding: 8 }}
+        className="form-input"
       />
       <textarea
         value={body}
@@ -54,13 +54,13 @@ export function CreateDecisionForm({ entityType, entityId }: { entityType: Entit
         rows={3}
         placeholder="Decision context and rationale..."
         required
-        style={{ width: "100%", padding: 8 }}
+        className="form-textarea"
       />
 
-      <button type="submit" disabled={saving} style={{ width: 140 }}>
-        {saving ? "Saving..." : "Add decision"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Add decision"}
       </button>
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

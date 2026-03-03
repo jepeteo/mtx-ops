@@ -46,30 +46,26 @@ export function AddTaskDependencyForm({ tasks }: { tasks: TaskOption[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 720 }}>
-      <div style={{ fontWeight: 600 }}>Add dependency</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select value={blockedTaskId} onChange={(event) => setBlockedTaskId(event.target.value)} style={{ padding: 8 }}>
+    <form onSubmit={onSubmit} className="grid max-w-[720px] gap-3 rounded-lg border border-border bg-card p-5">
+      <div className="text-sm font-semibold">Add dependency</div>
+      <div className="grid grid-cols-2 gap-3">
+        <select value={blockedTaskId} onChange={(event) => setBlockedTaskId(event.target.value)} className="form-select">
           {tasks.map((task) => (
-            <option key={task.id} value={task.id}>
-              Blocked: {task.title}
-            </option>
+            <option key={task.id} value={task.id}>Blocked: {task.title}</option>
           ))}
         </select>
 
-        <select value={blockerTaskId} onChange={(event) => setBlockerTaskId(event.target.value)} style={{ padding: 8 }}>
+        <select value={blockerTaskId} onChange={(event) => setBlockerTaskId(event.target.value)} className="form-select">
           {tasks.map((task) => (
-            <option key={task.id} value={task.id}>
-              Blocker: {task.title}
-            </option>
+            <option key={task.id} value={task.id}>Blocker: {task.title}</option>
           ))}
         </select>
       </div>
 
-      <button type="submit" disabled={saving} style={{ width: 180 }}>
-        {saving ? "Saving..." : "Create dependency"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create dependency"}
       </button>
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

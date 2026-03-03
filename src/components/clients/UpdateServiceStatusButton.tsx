@@ -27,8 +27,8 @@ export function UpdateServiceStatusButton({ serviceId, nextStatus }: { serviceId
   }
 
   return (
-    <button type="button" onClick={onUpdate} disabled={loading} style={{ marginRight: 6 }}>
-      {loading ? "Saving..." : nextStatus === "ACTIVE" ? "Activate" : "Cancel"}
+    <button type="button" onClick={onUpdate} disabled={loading} className="form-btn-outline mr-1.5 h-7 px-2.5 text-xs">
+      {loading ? "Saving…" : nextStatus === "ACTIVE" ? "Activate" : "Cancel"}
     </button>
   );
 }

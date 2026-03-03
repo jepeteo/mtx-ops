@@ -94,41 +94,39 @@ export function TaskRowActions({
   }
 
   return (
-    <div style={{ display: "grid", gap: 6 }}>
+    <div className="grid gap-1.5">
       <input
         value={nextTitle}
         onChange={(event) => setNextTitle(event.target.value)}
         placeholder="Task title"
-        style={{ padding: 6, fontSize: 12 }}
+        className="form-input h-7 text-xs"
       />
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type="date" value={nextDueAt} onChange={(event) => setNextDueAt(event.target.value)} style={{ padding: 6 }} />
+      <div className="flex items-center gap-1.5">
+        <input type="date" value={nextDueAt} onChange={(event) => setNextDueAt(event.target.value)} className="form-input h-7 text-xs" />
 
-        <select value={nextProjectId} onChange={(event) => setNextProjectId(event.target.value)} style={{ padding: 6 }}>
+        <select value={nextProjectId} onChange={(event) => setNextProjectId(event.target.value)} className="form-select h-7 text-xs">
           <option value="">No project</option>
           {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.keyPrefix} · {project.name}
-            </option>
+            <option key={project.id} value={project.id}>{project.keyPrefix} · {project.name}</option>
           ))}
         </select>
 
-        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as TaskStatus)} style={{ padding: 6 }}>
+        <select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as TaskStatus)} className="form-select h-7 text-xs">
           <option value="TODO">TODO</option>
           <option value="IN_PROGRESS">IN_PROGRESS</option>
           <option value="BLOCKED">BLOCKED</option>
           <option value="DONE">DONE</option>
         </select>
 
-        <button type="button" onClick={updateTask} disabled={saving}>
+        <button type="button" onClick={updateTask} disabled={saving} className="form-btn h-7 px-2.5 text-xs">
           Save
         </button>
 
-        <button type="button" onClick={deleteTask} disabled={saving}>
+        <button type="button" onClick={deleteTask} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
           Delete
         </button>
       </div>
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

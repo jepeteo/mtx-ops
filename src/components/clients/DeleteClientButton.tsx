@@ -31,11 +31,11 @@ export function DeleteClientButton({ clientId }: { clientId: string }) {
   }
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <button type="button" onClick={onDelete} disabled={loading} style={{ color: "#fff", background: "#b91c1c", border: 0, padding: "8px 12px", borderRadius: 6 }}>
-        {loading ? "Deleting..." : "Delete client"}
+    <div className="mt-4">
+      <button type="button" onClick={onDelete} disabled={loading} className="rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90">
+        {loading ? "Deleting…" : "Delete client"}
       </button>
-      {error ? <div style={{ marginTop: 8, color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="mt-2 text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

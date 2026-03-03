@@ -42,21 +42,21 @@ export function CreateNoteForm({ entityType, entityId }: { entityType: EntityTyp
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
+    <form onSubmit={onSubmit} className="grid gap-3">
       <textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
         rows={3}
         placeholder="Add context, decision details, or handover note..."
         required
-        style={{ width: "100%", padding: 8 }}
+        className="form-textarea"
       />
 
-      <button type="submit" disabled={saving} style={{ width: 130 }}>
-        {saving ? "Saving..." : "Add note"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Add note"}
       </button>
 
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

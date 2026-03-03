@@ -30,11 +30,11 @@ export function DeleteAssetLinkButton({ linkId }: { linkId: string }) {
   }
 
   return (
-    <div style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
-      <button type="button" onClick={onDelete} disabled={deleting}>
-        {deleting ? "Deleting..." : "Delete"}
+    <div className="inline-flex flex-col gap-1">
+      <button type="button" onClick={onDelete} disabled={deleting} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
+        {deleting ? "Deleting…" : "Delete"}
       </button>
-      {error ? <span style={{ color: "#ef4444", fontSize: 12 }}>{error}</span> : null}
+      {error ? <span className="text-xs font-medium text-destructive">{error}</span> : null}
     </div>
   );
 }

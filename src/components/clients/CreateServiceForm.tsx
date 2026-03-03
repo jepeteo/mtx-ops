@@ -61,26 +61,11 @@ export function CreateServiceForm({ clientId }: { clientId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 560, marginBottom: 14 }}>
-      <div style={{ fontWeight: 600 }}>Add service</div>
-
-      <input
-        placeholder="Service name"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        required
-        style={{ padding: 8 }}
-      />
-
-      <input
-        placeholder="Provider"
-        value={provider}
-        onChange={(event) => setProvider(event.target.value)}
-        required
-        style={{ padding: 8 }}
-      />
-
-      <select value={type} onChange={(event) => setType(event.target.value as ServiceType)} style={{ padding: 8 }}>
+    <form onSubmit={onSubmit} className="mb-3 grid max-w-[560px] gap-3 rounded-lg border border-border bg-card p-5">
+      <div className="text-sm font-semibold">Add service</div>
+      <input placeholder="Service name" value={name} onChange={(event) => setName(event.target.value)} required className="form-input" />
+      <input placeholder="Provider" value={provider} onChange={(event) => setProvider(event.target.value)} required className="form-input" />
+      <select value={type} onChange={(event) => setType(event.target.value as ServiceType)} className="form-select">
         <option value="DOMAIN">DOMAIN</option>
         <option value="HOSTING">HOSTING</option>
         <option value="EMAIL">EMAIL</option>
@@ -91,21 +76,12 @@ export function CreateServiceForm({ clientId }: { clientId: string }) {
         <option value="CMS">CMS</option>
         <option value="OTHER">OTHER</option>
       </select>
-
-      <input type="date" value={renewalDate} onChange={(event) => setRenewalDate(event.target.value)} style={{ padding: 8 }} />
-
-      <input
-        placeholder="Reminder days (e.g. 60,30,14,7)"
-        value={reminderRules}
-        onChange={(event) => setReminderRules(event.target.value)}
-        style={{ padding: 8 }}
-      />
-
-      <button type="submit" disabled={saving} style={{ width: 160 }}>
-        {saving ? "Saving..." : "Create service"}
+      <input type="date" value={renewalDate} onChange={(event) => setRenewalDate(event.target.value)} className="form-input" />
+      <input placeholder="Reminder days (e.g. 60,30,14,7)" value={reminderRules} onChange={(event) => setReminderRules(event.target.value)} className="form-input" />
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create service"}
       </button>
-
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }

@@ -34,11 +34,11 @@ export function AttachmentLinkActions({ linkId }: { linkId: string }) {
   }
 
   return (
-    <div style={{ display: "grid", gap: 4 }}>
-      <button type="button" onClick={unlinkAttachment} disabled={saving} style={{ color: "#b91c1c" }}>
-        {saving ? "Unlinking..." : "Unlink"}
+    <div className="grid gap-1">
+      <button type="button" onClick={unlinkAttachment} disabled={saving} className="form-btn-outline h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10">
+        {saving ? "Unlinking…" : "Unlink"}
       </button>
-      {error ? <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </div>
   );
 }

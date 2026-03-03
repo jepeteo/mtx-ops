@@ -48,20 +48,20 @@ export function CreateVaultPointerForm({ clientId }: { clientId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 760 }}>
-      <div style={{ fontWeight: 600 }}>Add vault pointer</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Label" required style={{ padding: 8 }} />
-        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} placeholder="Vault item ID" required style={{ padding: 8 }} />
+    <form onSubmit={onSubmit} className="grid max-w-[760px] gap-3 rounded-lg border border-border bg-card p-5">
+      <div className="text-sm font-semibold">Add vault pointer</div>
+      <div className="grid grid-cols-2 gap-3">
+        <input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Label" required className="form-input" />
+        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} placeholder="Vault item ID" required className="form-input" />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} placeholder="Field name" required style={{ padding: 8 }} />
-        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint (optional)" style={{ padding: 8 }} />
+      <div className="grid grid-cols-2 gap-3">
+        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} placeholder="Field name" required className="form-input" />
+        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint (optional)" className="form-input" />
       </div>
-      <button type="submit" disabled={saving} style={{ width: 170 }}>
-        {saving ? "Saving..." : "Create pointer"}
+      <button type="submit" disabled={saving} className="form-btn w-fit">
+        {saving ? "Saving…" : "Create pointer"}
       </button>
-      {error ? <div style={{ color: "#ef4444" }}>{error}</div> : null}
+      {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
     </form>
   );
 }
