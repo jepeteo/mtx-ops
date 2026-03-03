@@ -1,4 +1,4 @@
-import { createHmac, pbkdf2Sync, createDecipheriv, timingSafeEqual } from "crypto";
+import { createHmac, pbkdf2Sync, createDecipheriv, timingSafeEqual, createPrivateKey, privateDecrypt, constants } from "crypto";
 import { env } from "@/lib/env";
 
 export type VaultRevealRequest = {
@@ -15,7 +15,12 @@ type EncString = {
   mac: Buffer | null;
 };
 
-function parseEncString(s: string): EncString {
+type RsaEncString = {
+  type: 4;
+  ct: Buffer;
+};
+
+function parseEncString(s: string): EncString | RsaEncString {
   const dotIdx = s.indexOf(".");
   const type = parseInt(s.slice(0, dotIdx), 10);
   const rest = s.slice(dotIdx + 1);
@@ -39,6 +44,10 @@ function parseEncString(s: string): EncString {
       ct: Buffer.from(parts[1]!, "base64"),
       mac: null,
     };
+  }
+  if (type === 4) {
+    // Rsa2048_OaepSha256_B64
+    return { type: 4, ct: Buffer.from(parts[0]!, "base64") };
   }
   throw new Error(`Unsupported Bitwarden EncString type: ${type}`);
 }
@@ -86,7 +95,9 @@ function decryptEncString(enc: EncString, encKey: Buffer, macKey: Buffer): Buffe
 }
 
 function decryptString(encValue: string, encKey: Buffer, macKey: Buffer): string {
-  return decryptEncString(parseEncString(encValue), encKey, macKey).toString("utf8");
+  const parsed = parseEncString(encValue);
+  if (parsed.type === 4) throw new Error("Cannot AES-decrypt an RSA-encrypted string");
+  return decryptEncString(parsed as EncString, encKey, macKey).toString("utf8");
 }
 
 // ── Bitwarden API types ──────────────────────────────────────────────────────
@@ -100,8 +111,15 @@ type TokenResponse = {
   access_token: string;
 };
 
+type ProfileOrganization = {
+  id: string;
+  key: string; // Encrypted org key (encrypted with user key)
+};
+
 type ProfileResponse = {
   key: string; // EncUserKey
+  privateKey?: string; // Encrypted RSA private key (PKCS8 DER, AES-encrypted)
+  organizations?: ProfileOrganization[];
 };
 
 type CipherField = {
@@ -123,6 +141,7 @@ type CipherResponse = {
   notes?: string | null;
   login?: CipherLogin;
   fields?: CipherField[] | null;
+  organizationId?: string | null;
 };
 
 // ── Main export ──────────────────────────────────────────────────────────────
@@ -186,10 +205,15 @@ export async function revealSecret(req: VaultRevealRequest): Promise<{ value: st
       client_id: VAULTWARDEN_CLIENT_ID,
       client_secret: VAULTWARDEN_CLIENT_SECRET,
       scope: "api",
+      // Device info required by some Vaultwarden configurations
+      device_type: "21",
+      device_identifier: "mtx-ops-server-0001",
+      device_name: "mtx-ops-server",
     }).toString(),
   });
   if (!tokenRes.ok) {
-    throw new Error(`Vaultwarden token request failed (${tokenRes.status})`);
+    const body = await tokenRes.text().catch(() => "");
+    throw new Error(`Vaultwarden token request failed (${tokenRes.status}): ${body}`);
   }
   const { access_token: accessToken } = (await tokenRes.json()) as TokenResponse;
 
@@ -204,7 +228,7 @@ export async function revealSecret(req: VaultRevealRequest): Promise<{ value: st
 
   // 5. Derive stretched key pair, then decrypt EncUserKey → user key (64 bytes)
   const { encKey: strEncKey, macKey: strMacKey } = stretchMasterKey(masterKey);
-  const userKeyRaw = decryptEncString(parseEncString(profile.key), strEncKey, strMacKey);
+  const userKeyRaw = decryptEncString(parseEncString(profile.key) as EncString, strEncKey, strMacKey);
   if (userKeyRaw.length < 64) {
     throw new Error("Vault: decrypted user key is unexpectedly short");
   }
@@ -220,7 +244,52 @@ export async function revealSecret(req: VaultRevealRequest): Promise<{ value: st
   }
   const cipher = (await cipherRes.json()) as CipherResponse;
 
-  // 7. Extract and decrypt the requested field
+  // 7. Determine the correct decryption key (personal or organization)
+  let cipherEncKey = userEncKey;
+  let cipherMacKey = userMacKey;
+
+  if (cipher.organizationId) {
+    const org = profile.organizations?.find((o) => o.id === cipher.organizationId);
+    if (!org?.key) {
+      throw new Error(`Organization key not found for org ${cipher.organizationId}`);
+    }
+    if (!profile.privateKey) {
+      throw new Error("Profile privateKey is missing — needed to decrypt org key");
+    }
+
+    // Decrypt user's RSA private key (AES-encrypted PKCS8 DER)
+    const privKeyDer = decryptEncString(
+      parseEncString(profile.privateKey) as EncString,
+      userEncKey,
+      userMacKey
+    );
+    const rsaPrivateKey = createPrivateKey({
+      key: privKeyDer,
+      format: "der",
+      type: "pkcs8",
+    });
+
+    // Org key is RSA-OAEP-SHA1 encrypted (type 4 despite the name Rsa2048_OaepSha256)
+    const orgEnc = parseEncString(org.key);
+    if (orgEnc.type !== 4) {
+      throw new Error(`Expected RSA enc type 4 for org key, got ${orgEnc.type}`);
+    }
+    const orgKeyRaw = privateDecrypt(
+      {
+        key: rsaPrivateKey,
+        padding: constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: "sha1",
+      },
+      (orgEnc as RsaEncString).ct
+    );
+    if (orgKeyRaw.length < 64) {
+      throw new Error("Vault: decrypted org key is unexpectedly short");
+    }
+    cipherEncKey = orgKeyRaw.subarray(0, 32);
+    cipherMacKey = orgKeyRaw.subarray(32, 64);
+  }
+
+  // 8. Extract and decrypt the requested field
   let encValue: string | null | undefined;
 
   if (req.fieldName === "login.password") {
@@ -237,7 +306,7 @@ export async function revealSecret(req: VaultRevealRequest): Promise<{ value: st
     for (const f of fields) {
       if (!f.name || !f.value) continue;
       try {
-        const plainName = decryptString(f.name, userEncKey, userMacKey);
+        const plainName = decryptString(f.name, cipherEncKey, cipherMacKey);
         if (plainName === req.fieldName) {
           encValue = f.value;
           break;
@@ -252,6 +321,6 @@ export async function revealSecret(req: VaultRevealRequest): Promise<{ value: st
     throw new Error(`Field "${req.fieldName}" not found in vault item ${req.vaultItemId}`);
   }
 
-  const value = decryptString(encValue, userEncKey, userMacKey);
+  const value = decryptString(encValue, cipherEncKey, cipherMacKey);
   return { value };
 }
