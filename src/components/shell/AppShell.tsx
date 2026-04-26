@@ -9,6 +9,7 @@ import {
   Users,
   FolderKanban,
   KanbanSquare,
+  Receipt,
   Search,
   Settings,
   Globe,
@@ -26,6 +27,7 @@ const mainNav = [
   { href: "/app/providers", label: "Providers", icon: Globe },
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
   { href: "/app/tasks", label: "Tasks", icon: KanbanSquare },
+  { href: "/app/invoices", label: "Invoices", icon: Receipt },
 ];
 
 const toolsNav = [
@@ -89,6 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { id: "go-providers", label: "Open Providers", hint: "Provider catalog across clients", onSelect: () => (window.location.href = "/app/providers") },
     { id: "go-projects", label: "Go to Projects", hint: "Projects and milestones", onSelect: () => (window.location.href = "/app/projects") },
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
+    { id: "go-invoices", label: "Go to Invoices", hint: "Billing and revenue operations", onSelect: () => (window.location.href = "/app/invoices") },
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
     { id: "go-admin-users", label: "Open Admin Users", hint: "Manage workspace users", onSelect: () => (window.location.href = "/app/admin/users") },

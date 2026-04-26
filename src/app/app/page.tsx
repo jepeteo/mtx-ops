@@ -3,6 +3,7 @@ import { db } from "@/lib/db/db";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
 import { AlertTriangle, Clock, CalendarClock, Bell, ArrowRight } from "lucide-react";
+import { InvoiceDashboardWidgets } from "@/components/invoices/InvoiceDashboardWidgets";
 
 export default async function DashboardPage() {
   const session = await requireAuth();
@@ -83,6 +84,8 @@ export default async function DashboardPage() {
         })}
       </div>
 
+      <InvoiceDashboardWidgets />
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -94,6 +97,7 @@ export default async function DashboardPage() {
               { label: "Clients", href: "/app/clients" },
               { label: "Projects", href: "/app/projects" },
               { label: "Tasks", href: "/app/tasks" },
+                { label: "Invoices", href: "/app/invoices" },
               { label: "Search", href: "/app/search" },
             ].map((link) => (
               <Link

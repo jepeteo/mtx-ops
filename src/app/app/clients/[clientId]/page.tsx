@@ -19,6 +19,7 @@ import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkAc
 import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
+import { ClientInvoicesSection } from "@/components/invoices/ClientInvoicesSection";
 import { ArrowLeft, Pencil, ExternalLink, Pin, BarChart3, FileText, Lightbulb, ArrowRightLeft, Clock, Paperclip, ShieldCheck, Link2 } from "lucide-react";
 
 type Search = {
@@ -256,6 +257,8 @@ export default async function ClientCardPage({ params, searchParams }: { params:
           </CardContent>
         </Card>
       </section>
+
+      <ClientInvoicesSection clientId={client.id} clientName={client.name} />
 
       {/* Assets & links */}
       <section className="space-y-3">

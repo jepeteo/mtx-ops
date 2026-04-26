@@ -79,6 +79,19 @@ enum NotificationStatus {
   HANDLED
 }
 
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  void
+}
+
+enum InvoiceTaxMode {
+  uk_vat
+  reverse_charge
+  none
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -98,6 +111,28 @@ model Workspace {
   attachmentLinks AttachmentLink[]
   notifications Notification[]
   activityLog ActivityLog[]
+  invoices    Invoice[]
+  invoiceSequences InvoiceSequence[]
+  idempotencyRecords IdempotencyRecord[]
+}
+
+/// Request idempotency for safe retries (e.g. invoice email send). Stores only a safe response snapshot, not full bodies or attachments.
+model IdempotencyRecord {
+  id                 String   @id @default(uuid())
+  workspaceId        String
+  routeKey           String
+  idempotencyKey     String
+  requestFingerprint String
+  /// Safe JSON: invoiceId, status, subject line flags, provider message id, idempotentReplay, etc. — not email HTML, not PDF, not full provider payload.
+  responseSnapshot   Json
+  createdAt          DateTime @default(now())
+  expiresAt          DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, routeKey, idempotencyKey])
+  @@index([workspaceId, routeKey, createdAt])
+  @@index([expiresAt])
 }
 
 model User {
@@ -130,6 +165,75 @@ model Client {
   tasks         Task[]
   assetLinks    AssetLink[]
   vaultPointers VaultPointer[]
+  invoices      Invoice[]
+}
+
+model InvoiceSequence {
+  id          String   @id @default(uuid())
+  workspaceId String
+  year        Int
+  nextSequence Int     @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, year])
+  @@index([workspaceId, year, updatedAt])
+}
+
+model Invoice {
+  id               String        @id @default(uuid())
+  workspaceId      String
+  clientId         String
+  invoiceNumber    String
+  status           InvoiceStatus @default(draft)
+  currency         String
+  issueDate        DateTime
+  dueDate          DateTime
+  billingRecipient String?
+  billingEmail     String?
+  notes            String?
+  paymentTerms     String?
+  subtotalMinor    Int           @default(0)
+  taxMinor         Int           @default(0)
+  totalMinor       Int           @default(0)
+  amountPaidMinor  Int           @default(0)
+  sentAt           DateTime?
+  paidAt           DateTime?
+  voidedAt         DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lineItems InvoiceLineItem[]
+
+  @@unique([workspaceId, invoiceNumber])
+  @@index([workspaceId, status, dueDate])
+  @@index([workspaceId, issueDate(sort: Desc)])
+  @@index([workspaceId, clientId, issueDate(sort: Desc)])
+}
+
+model InvoiceLineItem {
+  id               String         @id @default(uuid())
+  invoiceId        String
+  position         Int
+  description      String
+  quantity         Decimal        @db.Decimal(18, 4)
+  unitPriceMinor   Int
+  taxMode          InvoiceTaxMode @default(none)
+  taxRateBps       Int            @default(0)
+  lineSubtotalMinor Int
+  lineTaxMinor     Int
+  lineTotalMinor   Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, position])
+  @@index([invoiceId, createdAt])
 }
 
 model Project {

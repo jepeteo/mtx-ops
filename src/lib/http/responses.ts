@@ -7,6 +7,7 @@ export type ErrorCode =
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "CONFLICT"
+  | "CONFIG_ERROR"
   | "RATE_LIMITED"
   | "INTERNAL"
   | "UPSTREAM_UNAVAILABLE";
