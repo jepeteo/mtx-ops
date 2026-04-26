@@ -9,13 +9,15 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Missing repo secrets are ""; fallbacks keep unit tests / build / server boot valid.
+    # E2E still needs real secrets + DB user for login/API to succeed.
     env:
       NODE_ENV: test
       APP_URL: http://127.0.0.1:3100
       AUTH_COOKIE_NAME: mtxos_session
-      AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET }}
+      AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET || 'ci-placeholder-auth-jwt-secret-20' }}
       AUTH_SESSION_DAYS: 14
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://ci:ci@127.0.0.1:5432/ci_placeholder' }}
       E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
       E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       SEED_OWNER_EMAIL: ${{ secrets.E2E_EMAIL }}

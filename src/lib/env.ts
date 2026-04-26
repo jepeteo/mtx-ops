@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().default("http://localhost:3000"),
@@ -7,8 +9,8 @@ const EnvSchema = z.object({
   AUTH_JWT_SECRET: z.string().min(20),
   AUTH_SESSION_DAYS: z.coerce.number().int().positive().default(14),
   DATABASE_URL: z.string().min(1),
-  SEED_OWNER_EMAIL: z.string().email().optional(),
-  SEED_OWNER_PASSWORD: z.string().min(8).optional(),
+  SEED_OWNER_EMAIL: z.preprocess(emptyToUndefined, z.string().email().optional()),
+  SEED_OWNER_PASSWORD: z.preprocess(emptyToUndefined, z.string().min(8).optional()),
   STORAGE_ENDPOINT: z.string().optional(),
   STORAGE_REGION: z.string().optional(),
   STORAGE_ACCESS_KEY_ID: z.string().optional(),
