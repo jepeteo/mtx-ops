@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type EntityType = "Client" | "Project" | "Task";
+type EntityType = "Client" | "Project" | "Task" | "Workspace";
 
-export function UploadAttachmentForm({ entityType, entityId }: { entityType: EntityType; entityId: string }) {
+export function UploadAttachmentForm({
+  entityType,
+  entityId,
+  onAttachmentLinked,
+}: {
+  entityType: EntityType;
+  entityId: string;
+  onAttachmentLinked?: (payload: { attachmentId: string; publicUrl: string | null }) => void;
+}) {
   const router = useRouter();
 
   const [label, setLabel] = useState("");
@@ -69,6 +77,14 @@ export function UploadAttachmentForm({ entityType, entityId }: { entityType: Ent
       return;
     }
 
+    type LinkOk = {
+      ok: true;
+      data: {
+        link: { id: string; attachmentId: string; entityType: string; entityId: string; label: string | null };
+        publicUrl: string | null;
+      };
+    };
+
     const linkResponse = await fetch("/api/attachments/link", {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json" },
@@ -87,6 +103,14 @@ export function UploadAttachmentForm({ entityType, entityId }: { entityType: Ent
       setSaving(false);
       setError(payload?.error?.message ?? "Failed to link attachment");
       return;
+    }
+
+    const linked = (await linkResponse.json()) as LinkOk;
+    if (linked.ok && onAttachmentLinked) {
+      onAttachmentLinked({
+        attachmentId: linked.data.link.attachmentId,
+        publicUrl: linked.data.publicUrl ?? null,
+      });
     }
 
     setSaving(false);

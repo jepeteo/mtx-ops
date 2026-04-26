@@ -15,6 +15,7 @@ import {
   Globe,
   Shield,
   Activity,
+  Landmark,
   ChevronRight,
   LogOut,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const adminNav = [
   { href: "/app/admin/users", label: "Users", icon: Shield },
   { href: "/app/admin/operations", label: "Operations", icon: Settings },
   { href: "/app/admin/activity", label: "Activity", icon: Activity },
+  { href: "/app/admin/invoice-settings", label: "Invoice settings", icon: Landmark },
 ];
 
 function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: React.ComponentType<{ className?: string }>; active: boolean }) {
@@ -97,6 +99,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { id: "go-admin-users", label: "Open Admin Users", hint: "Manage workspace users", onSelect: () => (window.location.href = "/app/admin/users") },
     { id: "go-admin-ops", label: "Open Admin Operations", hint: "Cleanup activity and failures", onSelect: () => (window.location.href = "/app/admin/operations") },
     { id: "go-admin-activity", label: "Open Admin Activity", hint: "Audit workflow and filters", onSelect: () => (window.location.href = "/app/admin/activity") },
+    {
+      id: "go-admin-invoice-settings",
+      label: "Invoice settings",
+      hint: "PDF branding and bank details",
+      onSelect: () => (window.location.href = "/app/admin/invoice-settings"),
+    },
     {
       id: "export-workspace",
       label: "Export Workspace JSON",

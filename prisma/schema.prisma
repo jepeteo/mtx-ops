@@ -95,6 +95,8 @@ enum InvoiceTaxMode {
 model Workspace {
   id        String   @id @default(uuid())
   name      String
+  /// Issuer branding + bank details for invoices (JSON shape v1 — see invoiceIssuer Zod in app code).
+  invoiceIssuer Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -156,6 +158,11 @@ model Client {
   status      ClientStatus @default(ACTIVE)
   pinnedNotes String?
   tags        String[]     @default([])
+  /// Default billing name for invoices (falls back to `name` when empty).
+  billingRecipient String?
+  billingEmail     String?
+  billingAddress   String?
+  billingVatId     String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -193,6 +200,8 @@ model Invoice {
   dueDate          DateTime
   billingRecipient String?
   billingEmail     String?
+  billingAddress   String?
+  billingVatId     String?
   notes            String?
   paymentTerms     String?
   subtotalMinor    Int           @default(0)

@@ -29,7 +29,7 @@ function sanitizeFileName(fileName: string) {
 
 export function buildStorageKey(input: {
   workspaceId: string;
-  entityType: "Client" | "Project" | "Task";
+  entityType: "Client" | "Project" | "Task" | "Workspace";
   entityId: string;
   fileName: string;
 }) {

@@ -9,6 +9,8 @@ const base = {
   currency: "GBP",
   billingRecipient: null,
   billingEmail: null,
+  billingAddress: null,
+  billingVatId: null,
   notes: null,
   paymentTerms: null,
   subtotalMinor: 1000,

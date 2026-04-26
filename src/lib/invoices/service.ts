@@ -25,13 +25,17 @@ export const InvoiceLineInputSchema = z.object({
   taxRateBps: z.number().int().nonnegative().max(100_000).optional(),
 });
 
+const emptyBillingToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
+
 export const CreateInvoiceSchema = z.object({
   clientId: z.string().uuid(),
   currency: z.string().min(3).max(3),
   issueDate: z.string().datetime(),
   dueDate: z.string().datetime(),
-  billingRecipient: z.string().max(200).optional().nullable(),
-  billingEmail: z.string().email().max(255).optional().nullable(),
+  billingRecipient: z.preprocess(emptyBillingToNull, z.string().max(200).optional().nullable()),
+  billingEmail: z.preprocess(emptyBillingToNull, z.string().email().max(255).optional().nullable()),
+  billingAddress: z.preprocess(emptyBillingToNull, z.string().max(4_000).optional().nullable()),
+  billingVatId: z.preprocess(emptyBillingToNull, z.string().max(80).optional().nullable()),
   notes: z.string().max(4_000).optional().nullable(),
   paymentTerms: z.string().max(400).optional().nullable(),
   lineItems: z.array(InvoiceLineInputSchema).max(500).optional().default([]),
@@ -42,8 +46,10 @@ export const UpdateInvoiceSchema = z
     currency: z.string().min(3).max(3).optional(),
     issueDate: z.string().datetime().optional(),
     dueDate: z.string().datetime().optional(),
-    billingRecipient: z.string().max(200).optional().nullable(),
-    billingEmail: z.string().email().max(255).optional().nullable(),
+    billingRecipient: z.preprocess(emptyBillingToNull, z.string().max(200).optional().nullable()),
+    billingEmail: z.preprocess(emptyBillingToNull, z.string().email().max(255).optional().nullable()),
+    billingAddress: z.preprocess(emptyBillingToNull, z.string().max(4_000).optional().nullable()),
+    billingVatId: z.preprocess(emptyBillingToNull, z.string().max(80).optional().nullable()),
     notes: z.string().max(4_000).optional().nullable(),
     paymentTerms: z.string().max(400).optional().nullable(),
     status: z.never().optional(),
@@ -96,6 +102,8 @@ export function toApiInvoice(invoice: {
   dueDate: Date;
   billingRecipient: string | null;
   billingEmail: string | null;
+  billingAddress: string | null;
+  billingVatId: string | null;
   notes: string | null;
   paymentTerms: string | null;
   subtotalMinor: number;

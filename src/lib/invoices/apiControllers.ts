@@ -15,6 +15,7 @@ import {
   InvoiceLineInputSchema,
 } from "@/lib/invoices/service";
 import { mapInvoiceToPdfData, renderInvoicePdfBuffer, safeInvoiceAttachmentFilename } from "@/lib/invoices/pdf";
+import { invoiceIssuerToPdfContext } from "@/lib/workspace/invoiceIssuer";
 import { INVOICE_SEND_EMAIL_ROUTE_KEY, SendInvoiceEmailBodySchema } from "@/lib/invoices/service";
 import { computeInvoiceEmailRequestFingerprint } from "@/lib/invoices/emailFingerprint";
 import { getResendInvoiceConfigFromEnv, sendInvoiceEmailWithResend } from "@/lib/invoices/resendInvoiceEmail";
@@ -28,6 +29,7 @@ type ApiDeps = {
       }
   >;
   db: {
+    workspace: { findFirst: (...args: any[]) => Promise<any> };
     client: { findFirst: (...args: any[]) => Promise<any> };
     invoice: {
       findMany: (...args: any[]) => Promise<any[]>;
@@ -71,6 +73,36 @@ type EmailSendSnapshotV1 = {
 
 type RouteParams = { id: string };
 const UuidSchema = z.string().uuid();
+
+const INVOICE_DETAIL_CLIENT_SELECT = {
+  id: true,
+  name: true,
+  billingRecipient: true,
+  billingEmail: true,
+  billingAddress: true,
+  billingVatId: true,
+} as const;
+
+function resolveBillingForCreate(
+  parsed: z.infer<typeof CreateInvoiceSchema>,
+  client: {
+    name: string;
+    billingRecipient: string | null;
+    billingEmail: string | null;
+    billingAddress: string | null;
+    billingVatId: string | null;
+  },
+) {
+  const has = (s: string | null | undefined) => s != null && String(s).trim().length > 0;
+  return {
+    billingRecipient: has(parsed.billingRecipient)
+      ? String(parsed.billingRecipient).trim()
+      : client.billingRecipient?.trim() || client.name,
+    billingEmail: has(parsed.billingEmail) ? String(parsed.billingEmail).trim() : client.billingEmail?.trim() || null,
+    billingAddress: has(parsed.billingAddress) ? String(parsed.billingAddress).trim() : client.billingAddress?.trim() || null,
+    billingVatId: has(parsed.billingVatId) ? String(parsed.billingVatId).trim() : client.billingVatId?.trim() || null,
+  };
+}
 
 export async function listInvoicesController(req: Request, deps: ApiDeps) {
   const auth = await deps.requireAuthApi(req);
@@ -121,7 +153,7 @@ export async function listInvoicesController(req: Request, deps: ApiDeps) {
           : {}),
     },
     include: {
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
       lineItems: { select: { id: true } },
     },
     orderBy: [{ issueDate: "desc" }, { createdAt: "desc" }],
@@ -149,11 +181,20 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
 
   const client = await deps.db.client.findFirst({
     where: { id: parsed.data.clientId, workspaceId: auth.session.workspaceId },
-    select: { id: true },
+    select: {
+      id: true,
+      name: true,
+      billingRecipient: true,
+      billingEmail: true,
+      billingAddress: true,
+      billingVatId: true,
+    },
   });
   if (!client) {
     return deps.fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: parsed.data.clientId }, 404);
   }
+
+  const billing = resolveBillingForCreate(parsed.data, client);
 
   try {
     const created = await deps.db.$transaction(async (tx) => {
@@ -197,8 +238,10 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
           currency: parsed.data.currency.toUpperCase(),
           issueDate,
           dueDate,
-          billingRecipient: parsed.data.billingRecipient ?? null,
-          billingEmail: parsed.data.billingEmail ?? null,
+          billingRecipient: billing.billingRecipient,
+          billingEmail: billing.billingEmail,
+          billingAddress: billing.billingAddress,
+          billingVatId: billing.billingVatId,
           notes: parsed.data.notes ?? null,
           paymentTerms: parsed.data.paymentTerms ?? null,
           subtotalMinor: totals.subtotalMinor,
@@ -218,7 +261,7 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
         where: { id: invoice.id, workspaceId: auth.session.workspaceId },
         include: {
           lineItems: { orderBy: { position: "asc" } },
-          client: { select: { id: true, name: true } },
+          client: { select: INVOICE_DETAIL_CLIENT_SELECT },
         },
       });
     });
@@ -254,7 +297,7 @@ async function getScopedInvoice(id: string, workspaceId: string, db: ApiDeps["db
   return db.invoice.findFirst({
     where: { id, workspaceId },
     include: {
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
       lineItems: { orderBy: { position: "asc" } },
     },
   });
@@ -280,8 +323,17 @@ export async function downloadInvoicePdfController(req: Request, params: RoutePa
     return deps.fail(auth.requestId, "NOT_FOUND", "Invoice not found", { invoiceId: params.id }, 404);
   }
 
+  const workspace = await deps.db.workspace.findFirst({
+    where: { id: auth.session.workspaceId },
+    select: { name: true, invoiceIssuer: true },
+  });
+  if (!workspace) {
+    return deps.fail(auth.requestId, "INTERNAL", "Workspace not found", undefined, 500);
+  }
+
   const renderPdf = deps.renderInvoicePdfBuffer ?? renderInvoicePdfBuffer;
-  const pdfBuffer = await renderPdf(mapInvoiceToPdfData(invoice));
+  const issuer = invoiceIssuerToPdfContext(workspace.name, workspace.invoiceIssuer);
+  const pdfBuffer = await renderPdf(mapInvoiceToPdfData(invoice), issuer);
 
   await deps.logActivity({
     workspaceId: auth.session.workspaceId,
@@ -438,10 +490,20 @@ export async function sendInvoiceEmailController(req: Request, params: RoutePara
     );
   }
 
+  const workspace = await deps.db.workspace.findFirst({
+    where: { id: auth.session.workspaceId },
+    select: { name: true, invoiceIssuer: true },
+  });
+  if (!workspace) {
+    return deps.fail(auth.requestId, "INTERNAL", "Workspace not found", undefined, 500);
+  }
+
+  const issuer = invoiceIssuerToPdfContext(workspace.name, workspace.invoiceIssuer);
+
   const renderPdf = deps.renderInvoicePdfBuffer ?? renderInvoicePdfBuffer;
   let pdfBuffer: Uint8Array;
   try {
-    const buf = await renderPdf(mapInvoiceToPdfData(invoice));
+    const buf = await renderPdf(mapInvoiceToPdfData(invoice), issuer);
     pdfBuffer = Uint8Array.from(buf);
   } catch {
     await deps.logActivity({
@@ -455,9 +517,9 @@ export async function sendInvoiceEmailController(req: Request, params: RoutePara
     return deps.fail(auth.requestId, "INTERNAL", "Failed to render invoice PDF", undefined, 500);
   }
 
-  const subject = `Invoice ${invoice.invoiceNumber} from MTX Studio`;
+  const subject = `Invoice ${invoice.invoiceNumber} from ${issuer.legalName}`;
   const attachmentFilename = safeInvoiceAttachmentFilename(invoice.invoiceNumber);
-  const textBody = `Please find invoice ${invoice.invoiceNumber} attached as a PDF.\n\nThank you,\nMTX Studio`;
+  const textBody = `Please find invoice ${invoice.invoiceNumber} attached as a PDF.\n\nThank you,\n${issuer.legalName}`;
 
   const send = deps.sendResendInvoiceEmail ?? sendInvoiceEmailWithResend;
   const sendResult = await send({
@@ -508,7 +570,7 @@ export async function sendInvoiceEmailController(req: Request, params: RoutePara
           },
           include: {
             lineItems: { orderBy: { position: "asc" } },
-            client: { select: { id: true, name: true } },
+            client: { select: INVOICE_DETAIL_CLIENT_SELECT },
           },
         });
 
@@ -541,7 +603,7 @@ export async function sendInvoiceEmailController(req: Request, params: RoutePara
         where: { id: invoice.id, workspaceId: auth.session.workspaceId },
         include: {
           lineItems: { orderBy: { position: "asc" } },
-          client: { select: { id: true, name: true } },
+          client: { select: INVOICE_DETAIL_CLIENT_SELECT },
         },
       });
       if (!reloaded) {
@@ -645,6 +707,8 @@ export async function patchInvoiceController(req: Request, params: RouteParams, 
       dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined,
       billingRecipient: parsed.data.billingRecipient !== undefined ? (parsed.data.billingRecipient ?? null) : undefined,
       billingEmail: parsed.data.billingEmail !== undefined ? (parsed.data.billingEmail ?? null) : undefined,
+      billingAddress: parsed.data.billingAddress !== undefined ? (parsed.data.billingAddress ?? null) : undefined,
+      billingVatId: parsed.data.billingVatId !== undefined ? (parsed.data.billingVatId ?? null) : undefined,
       notes: parsed.data.notes !== undefined ? (parsed.data.notes ?? null) : undefined,
       paymentTerms: parsed.data.paymentTerms !== undefined ? (parsed.data.paymentTerms ?? null) : undefined,
       subtotalMinor: totals.subtotalMinor,
@@ -652,7 +716,7 @@ export async function patchInvoiceController(req: Request, params: RouteParams, 
       totalMinor: totals.totalMinor,
     },
     include: {
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
       lineItems: { orderBy: { position: "asc" } },
     },
   });
@@ -714,7 +778,7 @@ export async function markSentController(req: Request, params: RouteParams, deps
     },
     include: {
       lineItems: { orderBy: { position: "asc" } },
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
     },
   });
 
@@ -772,7 +836,7 @@ export async function markPaidController(req: Request, params: RouteParams, deps
     },
     include: {
       lineItems: { orderBy: { position: "asc" } },
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
     },
   });
 
@@ -818,7 +882,7 @@ export async function markVoidController(req: Request, params: RouteParams, deps
     },
     include: {
       lineItems: { orderBy: { position: "asc" } },
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
     },
   });
 
@@ -861,7 +925,7 @@ async function recalculateInvoiceTotalsInTransaction(tx: any, invoiceId: string)
       totalMinor: totals.totalMinor,
     },
     include: {
-      client: { select: { id: true, name: true } },
+      client: { select: INVOICE_DETAIL_CLIENT_SELECT },
       lineItems: { orderBy: { position: "asc" } },
     },
   });

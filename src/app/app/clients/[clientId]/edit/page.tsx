@@ -48,6 +48,31 @@ export default async function EditClientPage({ params }: { params: Promise<{ cli
               <textarea name="pinnedNotes" defaultValue={client.pinnedNotes ?? ""} rows={6} className="form-textarea" />
             </div>
 
+            <div className="border-t border-border pt-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Default billing (invoices)</p>
+              <div className="form-row">
+                <label className="form-label">Billing recipient</label>
+                <input
+                  name="billingRecipient"
+                  defaultValue={client.billingRecipient ?? ""}
+                  placeholder={`Falls back to client name (${client.name})`}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-row">
+                <label className="form-label">Billing email</label>
+                <input name="billingEmail" type="email" defaultValue={client.billingEmail ?? ""} className="form-input" />
+              </div>
+              <div className="form-row">
+                <label className="form-label">Billing address</label>
+                <textarea name="billingAddress" defaultValue={client.billingAddress ?? ""} rows={4} className="form-textarea" />
+              </div>
+              <div className="form-row">
+                <label className="form-label">VAT / tax ID</label>
+                <input name="billingVatId" defaultValue={client.billingVatId ?? ""} className="form-input" />
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 pt-2">
               <button type="submit" className="form-btn">Save changes</button>
               <Link href={`/app/clients/${client.id}`} className="form-btn-outline">Cancel</Link>

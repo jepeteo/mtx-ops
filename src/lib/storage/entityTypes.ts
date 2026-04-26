@@ -1,5 +1,5 @@
 import { z } from "zod";
 
-export const AttachmentEntityTypeSchema = z.enum(["Client", "Project", "Task"]);
+export const AttachmentEntityTypeSchema = z.enum(["Client", "Project", "Task", "Workspace"]);
 
 export type AttachmentEntityType = z.infer<typeof AttachmentEntityTypeSchema>;

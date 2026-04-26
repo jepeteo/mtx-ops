@@ -22,6 +22,7 @@ function makeDeps() {
     getResendInvoiceConfig: vi.fn().mockReturnValue({ apiKey: "re_test", from: "invoices@example.com" }),
     sendResendInvoiceEmail: vi.fn().mockResolvedValue({ messageId: "re_abc123" }),
     db: {
+      workspace: { findFirst: vi.fn().mockResolvedValue({ name: "Test Workspace", invoiceIssuer: null }) },
       client: { findFirst: vi.fn() },
       invoice: {
         findMany: vi.fn(),
@@ -65,6 +66,8 @@ const baseInvoice = {
   dueDate: new Date("2026-04-10T00:00:00.000Z"),
   billingRecipient: null,
   billingEmail: null,
+  billingAddress: null,
+  billingVatId: null,
   notes: null,
   paymentTerms: null,
   subtotalMinor: 10000,
@@ -76,7 +79,14 @@ const baseInvoice = {
   voidedAt: null,
   createdAt: new Date("2026-04-01T00:00:00.000Z"),
   updatedAt: new Date("2026-04-01T00:00:00.000Z"),
-  client: { id: "11111111-1111-4111-8111-111111111111", name: "Acme" },
+  client: {
+    id: "11111111-1111-4111-8111-111111111111",
+    name: "Acme",
+    billingRecipient: null,
+    billingEmail: null,
+    billingAddress: null,
+    billingVatId: null,
+  },
   lineItems: [
     {
       position: 1,
@@ -457,6 +467,7 @@ describe("invoice api controllers", () => {
         taxMinor: 2000,
         totalMinor: 12000,
       }),
+      expect.objectContaining({ legalName: "Test Workspace" }),
     );
   });
 

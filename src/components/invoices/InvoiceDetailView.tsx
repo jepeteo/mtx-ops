@@ -47,6 +47,8 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
   const [dueDate, setDueDate] = useState("");
   const [billingRecipient, setBillingRecipient] = useState("");
   const [billingEmail, setBillingEmail] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [billingVatId, setBillingVatId] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
 
@@ -79,6 +81,8 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
     setDueDate(payload.data.invoice.dueDate.slice(0, 10));
     setBillingRecipient(payload.data.invoice.billingRecipient ?? "");
     setBillingEmail(payload.data.invoice.billingEmail ?? "");
+    setBillingAddress(payload.data.invoice.billingAddress ?? "");
+    setBillingVatId(payload.data.invoice.billingVatId ?? "");
     setNotes(payload.data.invoice.notes ?? "");
     setPaymentTerms(payload.data.invoice.paymentTerms ?? "");
     setLoading(false);
@@ -106,6 +110,15 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
 
   const lineItems = useMemo(() => invoice?.lineItems ?? [], [invoice?.lineItems]);
 
+  function resetBillingFromClient() {
+    const c = invoice?.client;
+    if (!c || !isDraft) return;
+    setBillingRecipient((c.billingRecipient && c.billingRecipient.trim()) || c.name || "");
+    setBillingEmail(c.billingEmail ?? "");
+    setBillingAddress(c.billingAddress ?? "");
+    setBillingVatId(c.billingVatId ?? "");
+  }
+
   async function saveMetadata() {
     if (!invoice || !isDraft) return;
     setSavingMeta(true);
@@ -119,6 +132,8 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
         dueDate: toIsoDate(dueDate),
         billingRecipient: billingRecipient || null,
         billingEmail: billingEmail || null,
+        billingAddress: billingAddress || null,
+        billingVatId: billingVatId || null,
         notes: notes || null,
         paymentTerms: paymentTerms || null,
       }),
@@ -419,6 +434,20 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
             />
           </div>
           <textarea
+            value={billingAddress}
+            onChange={(e) => setBillingAddress(e.target.value)}
+            placeholder="Billing address"
+            className="form-input min-h-[72px]"
+            disabled={!isDraft}
+          />
+          <input
+            value={billingVatId}
+            onChange={(e) => setBillingVatId(e.target.value)}
+            placeholder="Client VAT / tax ID"
+            className="form-input"
+            disabled={!isDraft}
+          />
+          <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Notes"
@@ -432,9 +461,16 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
             className="form-input"
             disabled={!isDraft}
           />
-          <Button type="button" onClick={saveMetadata} disabled={!isDraft || savingMeta}>
-            {savingMeta ? "Saving..." : "Save invoice"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" onClick={saveMetadata} disabled={!isDraft || savingMeta}>
+              {savingMeta ? "Saving..." : "Save invoice"}
+            </Button>
+            {isDraft && invoice.client ? (
+              <Button type="button" variant="outline" size="sm" onClick={resetBillingFromClient}>
+                Reset from client profile
+              </Button>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
 

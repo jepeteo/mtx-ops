@@ -166,6 +166,7 @@ export default async function AdminOperationsPage({ searchParams }: { searchPara
         <Link href="/app/admin/users">Users</Link>
         <Link href="/app/admin/operations" className="active">Operations</Link>
         <Link href="/app/admin/activity">Activity</Link>
+        <Link href="/app/admin/invoice-settings">Invoice settings</Link>
       </nav>
 
       {cleanupRun === "ok" && (

@@ -78,6 +78,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
         <Link href="/app/admin/users">Users</Link>
         <Link href="/app/admin/operations">Operations</Link>
         <Link href="/app/admin/activity" className="active">Activity</Link>
+        <Link href="/app/admin/invoice-settings">Invoice settings</Link>
       </nav>
 
       {/* Filters */}

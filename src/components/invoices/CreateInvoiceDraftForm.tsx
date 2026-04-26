@@ -25,8 +25,6 @@ export function CreateInvoiceDraftForm({
   const [currency, setCurrency] = useState("GBP");
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
-  const [billingRecipient, setBillingRecipient] = useState("");
-  const [billingEmail, setBillingEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,8 +57,6 @@ export function CreateInvoiceDraftForm({
         currency: currency.toUpperCase(),
         issueDate: toIsoDate(issueDate),
         dueDate: toIsoDate(dueDate),
-        billingRecipient: billingRecipient || null,
-        billingEmail: billingEmail || null,
         lineItems: [],
       }),
     });
@@ -103,21 +99,7 @@ export function CreateInvoiceDraftForm({
         <input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className="form-input" />
         <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="form-input" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <input
-          value={billingRecipient}
-          onChange={(event) => setBillingRecipient(event.target.value)}
-          className="form-input"
-          placeholder="Billing recipient"
-        />
-        <input
-          value={billingEmail}
-          onChange={(event) => setBillingEmail(event.target.value)}
-          className="form-input"
-          placeholder="Billing email"
-          type="email"
-        />
-      </div>
+      <p className="text-xs text-muted-foreground">Billing details are taken from the client profile (you can edit them on the invoice).</p>
       <Button type="submit" className="w-fit" disabled={saving}>
         {saving ? "Creating..." : "Create draft"}
       </Button>

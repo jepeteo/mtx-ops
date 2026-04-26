@@ -5,6 +5,7 @@ import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
 import { entityExistsInWorkspace } from "@/lib/entities/exists";
 import { AttachmentEntityTypeSchema } from "@/lib/storage/entityTypes";
+import { getAttachmentPublicUrl } from "@/lib/storage/s3";
 
 const LinkSchema = z.object({
   attachmentId: z.string().uuid(),
@@ -97,13 +98,20 @@ export async function POST(req: Request) {
     },
   });
 
-  return ok(auth.requestId, {
-    link: {
-      id: link.id,
-      attachmentId: attachment.id,
-      entityType: link.entityType,
-      entityId: link.entityId,
-      label: link.label,
+  const publicUrl = getAttachmentPublicUrl(attachment.storageKey);
+
+  return ok(
+    auth.requestId,
+    {
+      link: {
+        id: link.id,
+        attachmentId: attachment.id,
+        entityType: link.entityType,
+        entityId: link.entityId,
+        label: link.label,
+      },
+      publicUrl,
     },
-  }, { status: 201 });
+    { status: 201 },
+  );
 }

@@ -30,6 +30,8 @@ export type InvoiceRecord = {
   dueDate: string;
   billingRecipient: string | null;
   billingEmail: string | null;
+  billingAddress: string | null;
+  billingVatId: string | null;
   notes: string | null;
   paymentTerms: string | null;
   subtotalMinor: number;
@@ -39,7 +41,14 @@ export type InvoiceRecord = {
   sentAt: string | null;
   paidAt: string | null;
   voidedAt: string | null;
-  client?: { id: string; name: string };
+  client?: {
+    id: string;
+    name: string;
+    billingRecipient?: string | null;
+    billingEmail?: string | null;
+    billingAddress?: string | null;
+    billingVatId?: string | null;
+  };
   lineItems?: InvoiceLineItem[];
   lineItemsCount?: number;
 };

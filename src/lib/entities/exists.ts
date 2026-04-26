@@ -1,12 +1,16 @@
 import { db } from "@/lib/db/db";
 
-type EntityType = "Client" | "Project" | "Task";
+type EntityType = "Client" | "Project" | "Task" | "Workspace";
 
 export async function entityExistsInWorkspace(input: {
   workspaceId: string;
   entityType: EntityType;
   entityId: string;
 }) {
+  if (input.entityType === "Workspace") {
+    return input.entityId === input.workspaceId;
+  }
+
   if (input.entityType === "Client") {
     const entity = await db.client.findFirst({
       where: { id: input.entityId, workspaceId: input.workspaceId },

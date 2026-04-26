@@ -9,6 +9,10 @@ const UpdateSchema = z.object({
   name: z.string().min(1).max(200),
   status: z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]),
   pinnedNotes: z.string().max(20000).optional().nullable(),
+  billingRecipient: z.string().max(200).optional().nullable(),
+  billingEmail: z.union([z.string().email().max(255), z.literal(""), z.null()]).optional(),
+  billingAddress: z.string().max(4000).optional().nullable(),
+  billingVatId: z.string().max(80).optional().nullable(),
 });
 
 type RouteParams = Promise<{ clientId: string }>;
@@ -16,7 +20,15 @@ type RouteParams = Promise<{ clientId: string }>;
 async function updateClient(params: {
   auth: Awaited<ReturnType<typeof requireAuthApi>> & { session: { userId: string; workspaceId: string } };
   clientId: string;
-  payload: { name: string; status: "ACTIVE" | "PAUSED" | "ARCHIVED"; pinnedNotes?: string | null };
+  payload: {
+    name: string;
+    status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+    pinnedNotes?: string | null;
+    billingRecipient?: string | null;
+    billingEmail?: string | null;
+    billingAddress?: string | null;
+    billingVatId?: string | null;
+  };
 }) {
   const existing = await db.client.findFirst({
     where: { id: params.clientId, workspaceId: params.auth.session.workspaceId },
@@ -33,6 +45,12 @@ async function updateClient(params: {
       name: params.payload.name,
       status: params.payload.status,
       pinnedNotes: params.payload.pinnedNotes ?? null,
+      ...(params.payload.billingRecipient !== undefined ? { billingRecipient: params.payload.billingRecipient } : {}),
+      ...(params.payload.billingEmail !== undefined
+        ? { billingEmail: params.payload.billingEmail === "" ? null : params.payload.billingEmail }
+        : {}),
+      ...(params.payload.billingAddress !== undefined ? { billingAddress: params.payload.billingAddress } : {}),
+      ...(params.payload.billingVatId !== undefined ? { billingVatId: params.payload.billingVatId } : {}),
     },
   });
 
@@ -160,6 +178,10 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
     name: form.get("name"),
     status: form.get("status"),
     pinnedNotes: form.get("pinnedNotes"),
+    billingRecipient: form.get("billingRecipient") || null,
+    billingEmail: form.get("billingEmail") || null,
+    billingAddress: form.get("billingAddress") || null,
+    billingVatId: form.get("billingVatId") || null,
   };
 
   const parsed = UpdateSchema.safeParse(raw);
