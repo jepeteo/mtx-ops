@@ -93,3 +93,46 @@ Status note (2026-03-01): cleanup result params now auto-clear after 10s while p
 ### H1 — Global search
 ### H2 — Inactivity reminders
 ### H3 — Export
+
+## Epic I — Invoicing & Revenue Operations
+Status note (2026-04-25) — **closeout:** client-linked invoices, line items, lifecycle and transitions, PDF download, Resend email send (with idempotency), ActivityLog, dashboard widgets, and strict workspace scoping are implemented. Payment provider integration and accounting sync remain out of scope.
+
+### I1 — Invoice CRUD (client-linked)
+- As an Admin/Owner, I can create and update invoices linked to a client in my workspace.
+- As an Admin/Owner, I can list invoices with filters by status, client, and due date.
+**Acceptance**
+- Invoice records are always scoped to workspace and client.
+- Server rejects cross-workspace reads/writes.
+- Persisted status enum is `draft`, `sent`, `paid`, `void`; `overdue` is computed in API/UI, not stored.
+
+### I2 — Invoice line items
+- As an Admin/Owner, I can add, update, and remove line items on an invoice.
+- As an Admin/Owner, I can store quantity, unit price, tax, and computed totals.
+**Acceptance**
+- Money values are stored in integer minor units + currency.
+- Totals are validated server-side and cannot be negative.
+
+### I3 — PDF generation + download
+- As an Admin/Owner, I can generate and download a PDF for an invoice.
+**Acceptance**
+- PDF output includes invoice number, issuer, client details, line items, totals, dates, and status.
+- Regeneration is deterministic for the same invoice revision.
+
+### I4 — Email sending (Resend)
+- As an Admin/Owner, I can send invoice emails to a chosen recipient address with the invoice PDF attached.
+**Acceptance**
+- Email send uses Resend; V1 attaches the generated PDF (no client-trusted totals).
+- `Idempotency-Key` is required; DB-backed idempotency prevents duplicate replays; mismatched key/payload returns conflict.
+- Failed sends return actionable errors; `void` invoices cannot be emailed; `paid`/`sent` allow resend without downgrading status.
+
+### I5 — ActivityLog + auditability
+- As an owner, I can audit invoice lifecycle events.
+**Acceptance**
+- ActivityLog covers create/update/status change/pdf generation/email send attempts.
+- Logged metadata never includes raw secrets or SMTP/API tokens.
+
+### I6 — Dashboard widgets (basic)
+- As a user, I can quickly see invoicing health from dashboard widgets.
+**Acceptance**
+- Widgets include at least: overdue count, unpaid amount total, and recently sent invoices.
+- Widget queries enforce workspace scoping.

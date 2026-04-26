@@ -28,3 +28,29 @@
 3. App fetches from Vaultwarden via pointer
 4. App displays transiently; ActivityLog records `vault.reveal`
 5. If vault unreachable → clear error + retry
+
+## Flow 6 — Create invoice draft
+1. Open Client Card → Invoices
+2. Click “New Invoice”
+3. Add issue/due dates, currency, and line items
+4. Save draft (`draft`) with computed totals
+5. ActivityLog records `invoice.create` and subsequent `invoice.update` events
+
+## Flow 7 — Transition invoice to sent
+1. Open invoice detail
+2. Review line items and totals
+3. Confirm “Mark sent”
+4. App transitions status from `draft` to `sent`
+5. ActivityLog records `invoice.status.sent`
+
+## Flow 8 — Follow invoice lifecycle
+1. Dashboard widgets show overdue count, unpaid amount, and recent sends
+2. Invoices list supports status filters (`draft`, `sent`, `paid`, `overdue`, `void`)
+3. Mark invoice as paid or void when appropriate
+4. Overdue invoices are highlighted when due date passes and status is unpaid
+
+## Flow 9 — PDF download and email send
+1. Open invoice detail → **Download PDF** → server returns `GET /api/invoices/:id/pdf` (trusted DB + line items; ActivityLog `invoice.pdf.download`).
+2. **Send invoice email** → confirm dialog, enter `recipientEmail` (defaults from billing email when set) → `POST /api/invoices/:id/send-email` with `Idempotency-Key` header; PDF attached, subject `Invoice {number} from MTX Studio`, Resend env required.
+3. `draft` → on successful first send, status becomes `sent` and `sentAt` is set; `void` cannot be emailed; `sent`/`paid` can be resent.
+4. ActivityLog: `invoice.email.send` on success, `invoice.email.send_failed` on configuration/upstream errors (metadata excludes secrets and raw PDF).

@@ -55,3 +55,28 @@
 ## Vaultwarden
 - `POST /api/vault/reveal` (body: vaultPointerId)
 - `POST /api/vault/pointers`
+
+## Invoicing (Phase 8)
+- `GET /api/invoices` (filters: clientId, status, from, to, overdueOnly)
+- `POST /api/invoices`
+- `GET /api/invoices/:id`
+- `PATCH /api/invoices/:id`
+- `POST /api/invoices/:id/mark-sent`
+- `POST /api/invoices/:id/mark-paid`
+- `POST /api/invoices/:id/mark-void`
+- `POST /api/invoices/:id/line-items`
+- `PATCH /api/invoice-line-items/:id`
+- `DELETE /api/invoice-line-items/:id`
+- `GET /api/invoices/:id/pdf`
+- `POST /api/invoices/:id/send-email`
+
+### Invoicing notes
+- Persisted invoice statuses are constrained to `draft`, `sent`, `paid`, `void`; `overdue` is computed at read time.
+- All invoice endpoints must enforce strict workspace scoping.
+- Mutations and send actions must write ActivityLog entries.
+- Email delivery is done through Resend.
+- `GET /api/invoices/:id/pdf` returns a generated PDF (server-side render, trusted DB data).
+- `POST /api/invoices/:id/send-email` requires header `Idempotency-Key`, body `{ recipientEmail }`, attaches the same PDF, and uses `RESEND_API_KEY` + `INVOICE_EMAIL_FROM` from the environment. Cross-workspace access returns `NOT_FOUND`. Idempotent replays return the prior success payload without sending again.
+- Current implementation status: invoice CRUD, line items, PDF download, and Resend email send are implemented.
+- No payment provider integration in this phase.
+- No accounting sync in this phase.

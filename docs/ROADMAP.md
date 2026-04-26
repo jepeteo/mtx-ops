@@ -107,3 +107,21 @@
 - Manual cleanup results now persist as a status banner on operations page after refresh/navigation.
 - Status banner now includes a clear action that keeps current range/view filters.
 - Status banner now auto-clears cleanup result params after 10s while preserving current filters.
+
+## Phase 8 — Invoicing & Revenue Operations
+- Client-linked invoices
+- Invoice line items
+- Invoice lifecycle statuses (`draft`, `sent`, `paid`, `overdue`, `void`)
+- PDF generation for invoice download
+- Email sending via Resend
+- ActivityLog coverage for all invoice mutations and sends
+- Basic dashboard widgets for invoice health
+- Strict workspace scoping on invoice reads/writes
+
+### Current status (2026-04-25) — closeout
+- Phase 8 baseline is implemented for invoice CRUD: list/create/detail/update, status transitions (`mark-sent`, `mark-paid`, `mark-void`), and line-item create/update/delete with transactional totals recalculation.
+- Invoices UI is available at `/app/invoices`, `/app/invoices/:id`, Client Card invoices section, and dashboard invoice widgets (unpaid/overdue/revenue issued/revenue paid).
+- **PDF download** is implemented: `GET /api/invoices/:id/pdf` (server-rendered, trusted DB data).
+- **Email send** is implemented: `POST /api/invoices/:id/send-email` (Resend, PDF attachment, `Idempotency-Key` + DB `IdempotencyRecord`, env `RESEND_API_KEY` + `INVOICE_EMAIL_FROM`).
+- Overdue remains computed from persisted status + due date; it is not a persisted `Invoice.status` value.
+- Phase 8 excludes payment provider integration and accounting platform sync in this slice.

@@ -32,6 +32,8 @@ npm run db:migrate
 npm run db:seed
 ```
 
+`npm run db:migrate` / `npm run db:migrate:deploy` / `npm run prisma:studio` load **Next.js env files** (including `.env.local`) before invoking Prisma, so `DATABASE_URL` only in `.env.local` works. Plain `npx prisma migrate deploy` does **not** read `.env.local` by default—use `npm run db:migrate:deploy` instead.
+
 4) Run
 ```bash
 npm run dev

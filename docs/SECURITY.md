@@ -23,6 +23,18 @@
 - Store files in S3-compatible storage.
 - Only store metadata + storage key in DB.
 
+## Invoicing (Phase 8)
+- Invoices are strictly workspace-scoped on all reads/writes and exports.
+- Invoice status transitions for persisted values (`draft`, `sent`, `paid`, `void`) are server-validated; `overdue` is derived for display, not stored.
+- Invoice PDFs must be generated from server-side trusted data, not client-submitted totals.
+- Invoice email uses Resend; API keys and `INVOICE_EMAIL_FROM` are environment variables only, never in the database.
+- `IdempotencyRecord` stores a small safe JSON `responseSnapshot` (ids, status, `resendMessageId`, etc.) and must not store email body, PDF bytes, or full provider payloads.
+- ActivityLog must capture invoice lifecycle mutations, PDF download, and email send attempts; metadata must never include `RESEND_API_KEY`, raw API responses, or PDF payloads.
+
+## Out of scope (Phase 8)
+- No payment provider integration.
+- No accounting platform sync.
+
 ## See also
 - `docs/quality/QUALITY_BAR.md`
 - `docs/runbooks/OPERATIONS.md`
