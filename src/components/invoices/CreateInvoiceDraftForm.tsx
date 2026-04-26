@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ApiEnvelope, InvoiceRecord } from "./types";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,17 @@ export function CreateInvoiceDraftForm({
   const [billingEmail, setBillingEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (fixedClientId) {
+      setClientId(fixedClientId);
+      return;
+    }
+    setClientId((prev) => {
+      if (prev && clients.some((c) => c.id === prev)) return prev;
+      return clients[0]?.id ?? "";
+    });
+  }, [clients, fixedClientId]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
