@@ -90,6 +90,9 @@
   .data-table tbody td {
     @apply border-b border-border/50 px-4 py-2.5;
   }
+  .data-table tfoot td {
+    @apply border-b border-border/50 px-4 py-2.5 align-middle;
+  }
   .data-table tbody tr {
     @apply transition-colors hover:bg-secondary/50;
   }

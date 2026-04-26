@@ -9,7 +9,19 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { ConfirmInvoiceActionDialog } from "./ConfirmInvoiceActionDialog";
 import type { ApiEnvelope, InvoiceLineItem, InvoiceRecord } from "./types";
-import { formatMinorCurrency } from "@/lib/invoices/ui";
+import {
+  formatBpsAsPercent,
+  formatMinorCurrency,
+  parseMajorCurrencyToMinor,
+  parsePercentToBps,
+} from "@/lib/invoices/ui";
+
+function taxModeLabel(mode: InvoiceLineItem["taxMode"]) {
+  if (mode === "none") return "No VAT";
+  if (mode === "uk_vat") return "UK VAT";
+  if (mode === "reverse_charge") return "Reverse charge";
+  return mode;
+}
 
 function toIsoDate(value: string) {
   return new Date(`${value}T00:00:00.000Z`).toISOString();
@@ -40,9 +52,9 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
 
   const [newDescription, setNewDescription] = useState("");
   const [newQuantity, setNewQuantity] = useState("1");
-  const [newUnitPriceMinor, setNewUnitPriceMinor] = useState("0");
+  const [newUnitPriceMajor, setNewUnitPriceMajor] = useState("");
   const [newTaxMode, setNewTaxMode] = useState<"uk_vat" | "reverse_charge" | "none">("none");
-  const [newTaxRateBps, setNewTaxRateBps] = useState("0");
+  const [newTaxPercent, setNewTaxPercent] = useState("0");
 
   const isDraft = invoice?.status === "draft";
   const isVoid = invoice?.status === "void";
@@ -126,15 +138,17 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
     if (!invoice) return;
     setSavingLine(true);
     setError(null);
+    const unitPriceMinor = parseMajorCurrencyToMinor(newUnitPriceMajor);
+    const taxRateBps = newTaxMode === "uk_vat" ? parsePercentToBps(newTaxPercent) : 0;
     const response = await fetch(`/api/invoices/${invoiceId}/line-items`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         description: newDescription,
         quantity: newQuantity,
-        unitPriceMinor: Number(newUnitPriceMinor),
+        unitPriceMinor,
         taxMode: newTaxMode,
-        taxRateBps: Number(newTaxRateBps),
+        taxRateBps,
       }),
     });
     const payload = (await response.json().catch(() => null)) as
@@ -148,9 +162,9 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
     setInvoice(payload.data.invoice);
     setNewDescription("");
     setNewQuantity("1");
-    setNewUnitPriceMinor("0");
+    setNewUnitPriceMajor("");
     setNewTaxMode("none");
-    setNewTaxRateBps("0");
+    setNewTaxPercent("0");
     setSavingLine(false);
   }
 
@@ -436,9 +450,9 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
                   <th>#</th>
                   <th>Description</th>
                   <th>Quantity</th>
-                  <th>Unit (minor)</th>
-                  <th>Tax mode</th>
-                  <th>Tax bps</th>
+                  <th>Unit price</th>
+                  <th>Tax</th>
+                  <th>VAT %</th>
                   <th>Total</th>
                   <th>Actions</th>
                 </tr>
@@ -449,10 +463,10 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
                     <td>{line.position}</td>
                     <td>{line.description}</td>
                     <td>{line.quantity}</td>
-                    <td>{line.unitPriceMinor}</td>
-                    <td>{line.taxMode}</td>
-                    <td>{line.taxRateBps}</td>
-                    <td>{formatMinorCurrency(line.lineTotalMinor, invoice.currency)}</td>
+                    <td className="tabular-nums">{formatMinorCurrency(line.unitPriceMinor, invoice.currency)}</td>
+                    <td>{taxModeLabel(line.taxMode)}</td>
+                    <td className="tabular-nums">{formatBpsAsPercent(line.taxRateBps)}</td>
+                    <td className="tabular-nums">{formatMinorCurrency(line.lineTotalMinor, invoice.currency)}</td>
                     <td>
                       <div className="flex items-center gap-1">
                         <Button
@@ -491,52 +505,81 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
                   </tr>
                 )}
               </tbody>
+              {isDraft ? (
+                <tfoot>
+                  <tr className="border-t border-border bg-secondary/20 hover:bg-secondary/20">
+                    <td className="align-middle text-xs text-muted-foreground">New</td>
+                    <td className="align-middle">
+                      <input
+                        value={newDescription}
+                        onChange={(e) => setNewDescription(e.target.value)}
+                        className="form-input w-full min-w-[10rem]"
+                        placeholder="Description"
+                        aria-label="New line description"
+                      />
+                    </td>
+                    <td className="align-middle">
+                      <input
+                        value={newQuantity}
+                        onChange={(e) => setNewQuantity(e.target.value)}
+                        className="form-input w-full min-w-[4rem] tabular-nums"
+                        placeholder="Qty"
+                        inputMode="decimal"
+                        aria-label="Quantity"
+                      />
+                    </td>
+                    <td className="align-middle">
+                      <input
+                        value={newUnitPriceMajor}
+                        onChange={(e) => setNewUnitPriceMajor(e.target.value)}
+                        className="form-input w-full min-w-[5rem] tabular-nums"
+                        placeholder={`e.g. 250.00 (${invoice.currency})`}
+                        inputMode="decimal"
+                        aria-label="Unit price"
+                      />
+                    </td>
+                    <td className="align-middle">
+                      <select
+                        value={newTaxMode}
+                        onChange={(e) => {
+                          const v = e.target.value as "uk_vat" | "reverse_charge" | "none";
+                          setNewTaxMode(v);
+                          if (v === "uk_vat") {
+                            setNewTaxPercent((p) => (p === "0" || p === "" ? "20" : p));
+                          } else {
+                            setNewTaxPercent("0");
+                          }
+                        }}
+                        className="form-select w-full min-w-[7rem] text-xs"
+                        aria-label="Tax treatment"
+                      >
+                        <option value="none">No VAT</option>
+                        <option value="uk_vat">UK VAT</option>
+                        <option value="reverse_charge">Reverse charge</option>
+                      </select>
+                    </td>
+                    <td className="align-middle">
+                      <input
+                        value={newTaxPercent}
+                        onChange={(e) => setNewTaxPercent(e.target.value)}
+                        className="form-input w-full min-w-[3.5rem] tabular-nums disabled:opacity-50"
+                        placeholder="20"
+                        inputMode="decimal"
+                        disabled={newTaxMode !== "uk_vat"}
+                        aria-label="VAT percent"
+                        title="Standard UK VAT is 20%. Only used when tax is UK VAT."
+                      />
+                    </td>
+                    <td className="align-middle text-xs text-muted-foreground">—</td>
+                    <td className="align-middle">
+                      <Button type="button" size="sm" onClick={createLineItem} disabled={savingLine}>
+                        {savingLine ? "Saving..." : "Add"}
+                      </Button>
+                    </td>
+                  </tr>
+                </tfoot>
+              ) : null}
             </table>
-          </div>
-          <div className="grid gap-3 rounded-md border border-border p-3 sm:grid-cols-5">
-            <input
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              className="form-input sm:col-span-2"
-              placeholder="Description"
-              disabled={!isDraft}
-            />
-            <input
-              value={newQuantity}
-              onChange={(e) => setNewQuantity(e.target.value)}
-              className="form-input"
-              placeholder="Quantity"
-              disabled={!isDraft}
-            />
-            <input
-              value={newUnitPriceMinor}
-              onChange={(e) => setNewUnitPriceMinor(e.target.value)}
-              className="form-input"
-              placeholder="Unit (minor)"
-              disabled={!isDraft}
-            />
-            <div className="grid gap-2 sm:grid-cols-2 sm:col-span-5">
-              <select
-                value={newTaxMode}
-                onChange={(e) => setNewTaxMode(e.target.value as "uk_vat" | "reverse_charge" | "none")}
-                className="form-select"
-                disabled={!isDraft}
-              >
-                <option value="none">none</option>
-                <option value="uk_vat">uk_vat</option>
-                <option value="reverse_charge">reverse_charge</option>
-              </select>
-              <input
-                value={newTaxRateBps}
-                onChange={(e) => setNewTaxRateBps(e.target.value)}
-                className="form-input"
-                placeholder="Tax bps"
-                disabled={!isDraft}
-              />
-            </div>
-            <Button type="button" onClick={createLineItem} disabled={!isDraft || savingLine}>
-              {savingLine ? "Saving..." : "Add line item"}
-            </Button>
           </div>
         </CardContent>
       </Card>
