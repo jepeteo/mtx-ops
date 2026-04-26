@@ -1,6 +1,6 @@
 import React from "react";
 import { Prisma } from "@prisma/client";
-import { Document, Page, Text, View, StyleSheet, Image, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage, renderToBuffer } from "@react-pdf/renderer";
 import type { InvoiceIssuerPdfContext } from "@/lib/workspace/invoiceIssuer";
 
 type PdfLineItem = {
@@ -343,7 +343,7 @@ function InvoicePdfDocument({
 
         <View style={styles.headerRow}>
           <View style={styles.issuerLeft}>
-            {logoDataUrl ? <Image src={logoDataUrl} style={styles.logo} /> : null}
+            {logoDataUrl ? <PdfImage src={logoDataUrl} style={styles.logo} /> : null}
             <View style={styles.issuerTextBlock}>
               <Text style={styles.issuerName}>{issuer.legalName}</Text>
               {issuer.addressLines.map((line, i) => (
