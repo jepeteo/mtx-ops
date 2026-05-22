@@ -1,3 +1,7 @@
+import { vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+
 /** GitHub Actions exposes missing secrets as ""; `??=` only covers nullish. */
 function defaultIfBlank(name: string, value: string) {
   const current = process.env[name];
