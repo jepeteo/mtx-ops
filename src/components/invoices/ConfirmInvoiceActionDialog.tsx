@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 export function ConfirmInvoiceActionDialog({
   triggerLabel,
@@ -47,10 +47,10 @@ export function ConfirmInvoiceActionDialog({
         <DialogContent className="max-w-md">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{message}</p>
+              <DialogTitle className="text-sm font-semibold">{title}</DialogTitle>
+              <DialogDescription className="mt-1">{message}</DialogDescription>
             </div>
-            {error ? <div className="text-xs font-medium text-destructive">{error}</div> : null}
+            {error ? <div role="alert" className="text-xs font-medium text-destructive">{error}</div> : null}
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)} disabled={saving}>
                 Cancel

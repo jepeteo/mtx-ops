@@ -11,6 +11,7 @@ export default async function EditClientPage({ params }: { params: Promise<{ cli
   const routeParams = await params;
   const client = await db.client.findFirst({ where: { id: routeParams.clientId, workspaceId: session.workspaceId } });
   if (!client) notFound();
+  const canDeleteClient = session.role === "OWNER" || session.role === "ADMIN";
 
   return (
     <div className="space-y-6">
@@ -81,15 +82,17 @@ export default async function EditClientPage({ params }: { params: Promise<{ cli
         </CardContent>
       </Card>
 
-      <Card className="max-w-xl border-destructive/30">
-        <CardHeader>
-          <CardTitle className="text-sm text-destructive">Danger zone</CardTitle>
-          <CardDescription>Permanently delete this client and all associated data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DeleteClientButton clientId={client.id} />
-        </CardContent>
-      </Card>
+      {canDeleteClient ? (
+        <Card className="max-w-xl border-destructive/30">
+          <CardHeader>
+            <CardTitle className="text-sm text-destructive">Danger zone</CardTitle>
+            <CardDescription>Permanently delete this client and all associated data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteClientButton clientId={client.id} />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

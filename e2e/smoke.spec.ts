@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import nextEnv from "@next/env";
 
@@ -15,12 +16,20 @@ test("authenticated smoke flow", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: /mtx ops/i })).toBeVisible();
 
+  const loginA11y = await new AxeBuilder({ page }).analyze();
+  const loginSerious = loginA11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(loginSerious).toEqual([]);
+
   await page.getByPlaceholder("you@mtxstudio.com").fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole("button", { name: /sign in/i }).click();
 
   await page.waitForURL("**/app");
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+
+  const dashboardA11y = await new AxeBuilder({ page }).analyze();
+  const dashboardSerious = dashboardA11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(dashboardSerious).toEqual([]);
 
   const checks: Array<{ path: string; heading: RegExp }> = [
     { path: "/app/clients", heading: /clients/i },

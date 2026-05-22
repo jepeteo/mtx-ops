@@ -1,11 +1,23 @@
 import { requireRoleApi } from "@/lib/auth/guards";
+import { assertRateLimit } from "@/lib/auth/rateLimit";
 import { db } from "@/lib/db/db";
 import { fail, logServerError } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
 
 export async function GET(req: Request) {
-  const auth = await requireRoleApi(req, "ADMIN");
+  const auth = await requireRoleApi(req, "OWNER");
   if ("errorResponse" in auth) return auth.errorResponse;
+
+  const sourceIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rate = await assertRateLimit({
+    scope: "export-workspace",
+    identifier: `${auth.session.userId}|${sourceIp}`,
+    maxRequests: 3,
+    windowSec: 60 * 60,
+  });
+  if (rate.limited) {
+    return fail(auth.requestId, "RATE_LIMITED", "Export rate limit exceeded. Try again later.", undefined, 429);
+  }
 
   try {
     const workspaceId = auth.session.workspaceId;

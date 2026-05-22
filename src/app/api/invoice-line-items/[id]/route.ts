@@ -1,4 +1,4 @@
-import { requireAuthApi } from "@/lib/auth/guards";
+import { requireAdminApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
@@ -8,10 +8,10 @@ type RouteParams = { id: string };
 
 export async function PATCH(req: Request, { params }: { params: Promise<RouteParams> }) {
   const routeParams = await params;
-  return updateInvoiceLineItemController(req, routeParams, { requireAuthApi, db, fail, ok, logActivity });
+  return updateInvoiceLineItemController(req, routeParams, { requireAuthApi: requireAdminApi, db, fail, ok, logActivity });
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<RouteParams> }) {
   const routeParams = await params;
-  return deleteInvoiceLineItemController(req, routeParams, { requireAuthApi, db, fail, ok, logActivity });
+  return deleteInvoiceLineItemController(req, routeParams, { requireAuthApi: requireAdminApi, db, fail, ok, logActivity });
 }

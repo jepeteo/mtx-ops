@@ -1,10 +1,12 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Bell,
+  Menu,
   LayoutDashboard,
   Users,
   FolderKanban,
@@ -19,8 +21,11 @@ import {
   ChevronRight,
   LogOut,
 } from "lucide-react";
+import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { Role } from "@/lib/auth/types";
+import { hasMinRole } from "@/lib/auth/roles";
 
 const mainNav = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
@@ -74,8 +79,14 @@ function NavGroup({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, role }: { children: React.ReactNode; role: Role }) {
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const canAccessInvoices = hasMinRole(role, "ADMIN");
+  const canAccessAdmin = hasMinRole(role, "ADMIN");
+  const canExportWorkspace = role === "OWNER";
+
+  const visibleMainNav = mainNav.filter((item) => (item.href === "/app/invoices" ? canAccessInvoices : true));
 
   function isActive(href: string) {
     if (href === "/app") return pathname === "/app";
@@ -93,24 +104,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { id: "go-providers", label: "Open Providers", hint: "Provider catalog across clients", onSelect: () => (window.location.href = "/app/providers") },
     { id: "go-projects", label: "Go to Projects", hint: "Projects and milestones", onSelect: () => (window.location.href = "/app/projects") },
     { id: "go-tasks", label: "Go to Tasks", hint: "Kanban + list", onSelect: () => (window.location.href = "/app/tasks") },
-    { id: "go-invoices", label: "Go to Invoices", hint: "Billing and revenue operations", onSelect: () => (window.location.href = "/app/invoices") },
+    ...(canAccessInvoices
+      ? [{ id: "go-invoices", label: "Go to Invoices", hint: "Billing and revenue operations", onSelect: () => (window.location.href = "/app/invoices") }]
+      : []),
     { id: "go-search", label: "Open Search", hint: "Global workspace search", onSelect: () => (window.location.href = "/app/search") },
     { id: "go-notifications", label: "Open Notifications", hint: "Renewals, due dates, inactivity", onSelect: () => (window.location.href = "/app/notifications") },
-    { id: "go-admin-users", label: "Open Admin Users", hint: "Manage workspace users", onSelect: () => (window.location.href = "/app/admin/users") },
-    { id: "go-admin-ops", label: "Open Admin Operations", hint: "Cleanup activity and failures", onSelect: () => (window.location.href = "/app/admin/operations") },
-    { id: "go-admin-activity", label: "Open Admin Activity", hint: "Audit workflow and filters", onSelect: () => (window.location.href = "/app/admin/activity") },
-    {
-      id: "go-admin-invoice-settings",
-      label: "Invoice settings",
-      hint: "PDF branding and bank details",
-      onSelect: () => (window.location.href = "/app/admin/invoice-settings"),
-    },
-    {
-      id: "export-workspace",
-      label: "Export Workspace JSON",
-      hint: "Admin-only JSON backup",
-      onSelect: () => window.open("/api/export/workspace", "_blank", "noopener,noreferrer"),
-    },
+    ...(canAccessAdmin
+      ? [
+          { id: "go-admin-users", label: "Open Admin Users", hint: "Manage workspace users", onSelect: () => (window.location.href = "/app/admin/users") },
+          { id: "go-admin-ops", label: "Open Admin Operations", hint: "Cleanup activity and failures", onSelect: () => (window.location.href = "/app/admin/operations") },
+          { id: "go-admin-activity", label: "Open Admin Activity", hint: "Audit workflow and filters", onSelect: () => (window.location.href = "/app/admin/activity") },
+          {
+            id: "go-admin-invoice-settings",
+            label: "Invoice settings",
+            hint: "PDF branding and bank details",
+            onSelect: () => (window.location.href = "/app/admin/invoice-settings"),
+          },
+        ]
+      : []),
+    ...(canExportWorkspace
+      ? [
+          {
+            id: "export-workspace",
+            label: "Export Workspace JSON",
+            hint: "Owner-only JSON backup",
+            onSelect: () => window.open("/api/export/workspace", "_blank", "noopener,noreferrer"),
+          },
+        ]
+      : []),
   ];
 
   // Breadcrumb parts from pathname
@@ -121,6 +142,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
       <CommandPalette actions={actions} />
 
       {/* Sidebar */}
@@ -139,7 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2.5 pb-4">
           <div className="grid gap-0.5">
-            {mainNav.map((item) => (
+            {visibleMainNav.map((item) => (
               <NavItem key={item.href} {...item} active={isActive(item.href)} />
             ))}
           </div>
@@ -150,11 +177,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </NavGroup>
 
-          <NavGroup label="Admin">
-            {adminNav.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} />
-            ))}
-          </NavGroup>
+          {canAccessAdmin ? (
+            <NavGroup label="Admin">
+              {adminNav.map((item) => (
+                <NavItem key={item.href} {...item} active={isActive(item.href)} />
+              ))}
+            </NavGroup>
+          ) : null}
         </nav>
 
         {/* Sidebar footer */}
@@ -168,27 +197,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/60 px-6 backdrop-blur-md">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Link href="/app" className="text-muted-foreground hover:text-foreground">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/60 px-4 backdrop-blur-md sm:px-6">
+          <button
+            type="button"
+            className="mr-2 flex h-9 w-9 items-center justify-center rounded-md border border-border md:hidden"
+            aria-label="Open navigation menu"
+            aria-expanded={mobileNavOpen}
+            onClick={() => setMobileNavOpen(true)}
+          >
+            <Menu className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+            <Link href="/app" className="shrink-0 text-muted-foreground hover:text-foreground">
               MTX Ops
             </Link>
             {breadcrumb.map((part, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
-                <span className={i === breadcrumb.length - 1 ? "font-medium text-foreground" : "text-muted-foreground"}>
+              <span key={i} className="flex min-w-0 items-center gap-1.5">
+                <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" aria-hidden="true" />
+                <span
+                  className={cn(
+                    "truncate",
+                    i === breadcrumb.length - 1 ? "font-medium text-foreground" : "text-muted-foreground",
+                  )}
+                  aria-current={i === breadcrumb.length - 1 ? "page" : undefined}
+                >
                   {part}
                 </span>
               </span>
             ))}
-          </div>
+          </nav>
 
           <div className="flex items-center gap-2">
             <Link
               href="/app/notifications"
+              aria-label="Notifications"
               className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              <Bell className="h-4 w-4" />
+              <Bell className="h-4 w-4" aria-hidden="true" />
             </Link>
 
             <DropdownMenu>
@@ -201,7 +246,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onSelect={() => alert("Profile (later)")}>Profile</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast.message("Profile settings are not available yet.")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleSignOut} className="text-destructive">
                   <LogOut className="mr-2 h-3.5 w-3.5" />
                   Sign out
@@ -212,10 +257,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-6 py-6">{children}</div>
         </main>
       </div>
+
+      {mobileNavOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            aria-label="Close navigation menu"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-60 flex-col border-r border-border bg-sidebar shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4">
+              <span className="text-sm font-semibold">Menu</span>
+              <button type="button" className="text-xs text-muted-foreground" onClick={() => setMobileNavOpen(false)}>
+                Close
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto px-2.5 pb-4" aria-label="Mobile">
+              <div className="grid gap-0.5">
+                {visibleMainNav.map((item) => (
+                  <NavItem key={item.href} {...item} active={isActive(item.href)} />
+                ))}
+              </div>
+              <NavGroup label="Tools">
+                {toolsNav.map((item) => (
+                  <NavItem key={item.href} {...item} active={isActive(item.href)} />
+                ))}
+              </NavGroup>
+              {canAccessAdmin ? (
+                <NavGroup label="Admin">
+                  {adminNav.map((item) => (
+                    <NavItem key={item.href} {...item} active={isActive(item.href)} />
+                  ))}
+                </NavGroup>
+              ) : null}
+            </nav>
+          </aside>
+        </div>
+      ) : null}
     </div>
   );
 }

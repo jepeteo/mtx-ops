@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export function VaultPointerActions({
   pointer,
   clientId,
+  canManageVault = false,
 }: {
   pointer: {
     id: string;
@@ -15,6 +16,7 @@ export function VaultPointerActions({
     usernameHint: string | null;
   };
   clientId: string;
+  canManageVault?: boolean;
 }) {
   const router = useRouter();
 
@@ -148,16 +150,28 @@ export function VaultPointerActions({
     }
   }
 
+  if (!canManageVault) {
+    return (
+      <div className="rounded-lg border border-border p-3 text-sm">
+        <div className="font-medium">{pointer.label}</div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          Field: {pointer.fieldName}
+          {pointer.usernameHint ? ` · ${pointer.usernameHint}` : ""}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-2 rounded-lg border border-border p-3">
       <div className="grid grid-cols-2 gap-2">
-        <input value={label} onChange={(event) => setLabel(event.target.value)} className="form-input h-7 text-xs" />
-        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} className="form-input h-7 text-xs" />
+        <input value={label} onChange={(event) => setLabel(event.target.value)} className="form-input h-7 text-xs" aria-label="Pointer label" />
+        <input value={vaultItemId} onChange={(event) => setVaultItemId(event.target.value)} className="form-input h-7 text-xs" aria-label="Vault item ID" />
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} className="form-input h-7 text-xs" />
-        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint" className="form-input h-7 text-xs" />
+        <input value={fieldName} onChange={(event) => setFieldName(event.target.value)} className="form-input h-7 text-xs" aria-label="Field name" />
+        <input value={usernameHint} onChange={(event) => setUsernameHint(event.target.value)} placeholder="Username hint" className="form-input h-7 text-xs" aria-label="Username hint" />
       </div>
 
       <div className="flex items-center gap-1.5">

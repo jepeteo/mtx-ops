@@ -121,6 +121,26 @@
   .tab-bar .tab-inactive {
     @apply text-muted-foreground hover:bg-secondary hover:text-foreground;
   }
+  .tab-bar a.active,
+  .tab-bar button.active {
+    @apply bg-primary text-primary-foreground;
+  }
+  .tab-bar a:not(.active):not(.tab-active),
+  .tab-bar button:not(.active):not(.tab-active) {
+    @apply text-muted-foreground hover:bg-secondary hover:text-foreground;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 
   /* Status pill */
   .status-pill {

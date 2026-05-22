@@ -7,7 +7,7 @@ import { CreateMilestoneForm } from "@/components/projects/CreateMilestoneForm";
 import { MilestoneRowActions } from "@/components/projects/MilestoneRowActions";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
-import { getAttachmentPublicUrl } from "@/lib/storage/s3";
+import { buildAttachmentDownloadUrlMap } from "@/lib/storage/s3";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Paperclip } from "lucide-react";
@@ -59,6 +59,10 @@ export default async function ProjectsPage() {
 		if (existing) existing.push(link);
 		else attachmentMap.set(link.entityId, [link]);
 	}
+
+	const attachmentDownloadUrls = await buildAttachmentDownloadUrlMap(
+		projectAttachmentLinks.map((link) => link.attachment.storageKey),
+	);
 
 	return (
 		<div className="space-y-6">
@@ -166,7 +170,7 @@ export default async function ProjectsPage() {
 									{links.length > 0 ? (
 										<div className="grid gap-2">
 											{links.slice(0, 20).map((link) => {
-												const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+												const fileUrl = attachmentDownloadUrls.get(link.attachment.storageKey) ?? null;
 												return (
 													<div key={link.id} className="flex items-start justify-between rounded-md border border-border px-3 py-2">
 														<div>

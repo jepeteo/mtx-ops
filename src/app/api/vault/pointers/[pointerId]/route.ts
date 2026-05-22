@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireAuthApi } from "@/lib/auth/guards";
+import { requireRoleApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
@@ -34,7 +34,7 @@ async function getScopedPointer(pointerId: string, workspaceId: string) {
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<RouteParams> }) {
-  const auth = await requireAuthApi(req);
+  const auth = await requireRoleApi(req, "ADMIN");
   if ("errorResponse" in auth) return auth.errorResponse;
 
   const routeParams = await params;
@@ -88,7 +88,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<RoutePar
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<RouteParams> }) {
-  const auth = await requireAuthApi(req);
+  const auth = await requireRoleApi(req, "ADMIN");
   if ("errorResponse" in auth) return auth.errorResponse;
 
   const routeParams = await params;

@@ -1,3 +1,5 @@
+import { checkRateLimit } from "@/lib/auth/rateLimitShared";
+
 type LoginRateEntry = {
   count: number;
   firstAttemptAt: number;
@@ -30,7 +32,7 @@ export function isLoginRateLimited(key: string): boolean {
     return false;
   }
 
-  return false;
+  return entry.count >= MAX_ATTEMPTS;
 }
 
 export function recordFailedLogin(key: string) {
@@ -52,4 +54,17 @@ export function recordFailedLogin(key: string) {
 
 export function resetFailedLogins(key: string) {
   failedLogins.delete(key);
+}
+
+export async function assertRateLimit(input: {
+  scope: string;
+  identifier: string;
+  maxRequests: number;
+  windowSec: number;
+}): Promise<{ limited: boolean; retryAfterSec?: number }> {
+  return checkRateLimit({
+    key: `${input.scope}:${input.identifier}`,
+    maxRequests: input.maxRequests,
+    windowSec: input.windowSec,
+  });
 }

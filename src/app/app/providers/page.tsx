@@ -16,14 +16,21 @@ export default async function ProvidersPage({ searchParams }: { searchParams?: P
   const services = await db.service.findMany({
     where: {
       client: { workspaceId: session.workspaceId },
-      ...(query ? { OR: [{ provider: { contains: query, mode: "insensitive" } }, { name: { contains: query, mode: "insensitive" } }] } : {}),
+      ...(query
+        ? {
+            OR: [
+              { provider: { contains: query, mode: "insensitive" as const } },
+              { name: { contains: query, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
     },
     select: {
       id: true, provider: true, name: true, status: true, renewalDate: true, clientId: true,
       client: { select: { name: true } },
     },
     orderBy: [{ provider: "asc" }, { renewalDate: "asc" }, { createdAt: "desc" }],
-    take: 800,
+    take: 400,
   });
 
   const byProvider = new Map<string, { serviceCount: number; activeCount: number; unknownCount: number; nextRenewal: Date | null; clientMap: Map<string, string> }>();

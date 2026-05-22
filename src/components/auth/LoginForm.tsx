@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormFieldInput } from "@/components/ui/form-field";
+import { safeAppRedirectPath } from "@/lib/http/safeRedirect";
 
-export function LoginForm() {
+export function LoginForm({ redirectTo = "/app" }: { redirectTo?: string }) {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -34,7 +35,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/app");
+    router.push(safeAppRedirectPath(redirectTo));
   }
 
   return (
@@ -45,20 +46,29 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form className="grid gap-4" onSubmit={onSubmit}>
-          <div className="grid gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Email</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@mtxstudio.com" autoComplete="email" />
-          </div>
-          <div className="grid gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Password</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
-          </div>
-
+          <FormFieldInput
+            id="login-email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@mtxstudio.com"
+            autoComplete="email"
+            autoFocus
+          />
           {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs font-medium text-destructive">
+            <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs font-medium text-destructive">
               {error}
             </div>
           ) : null}
+          <FormFieldInput
+            id="login-password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
 
           <Button type="submit" className="mt-1 w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}

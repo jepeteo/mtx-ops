@@ -16,7 +16,7 @@ import { CreateAssetLinkForm } from "@/components/clients/CreateAssetLinkForm";
 import { DeleteAssetLinkButton } from "@/components/clients/DeleteAssetLinkButton";
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
-import { getAttachmentPublicUrl } from "@/lib/storage/s3";
+import { buildAttachmentDownloadUrlMap } from "@/lib/storage/s3";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ClientInvoicesSection } from "@/components/invoices/ClientInvoicesSection";
@@ -32,6 +32,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
   const routeParams = await params;
   const resolvedSearch = (await searchParams) ?? {};
   const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
+  const canManageVault = canManageAttachments;
   const client = await db.client.findFirst({
     where: { id: routeParams.clientId, workspaceId: session.workspaceId },
     include: {
@@ -44,38 +45,39 @@ export default async function ClientCardPage({ params, searchParams }: { params:
   if (!client) notFound();
   const clientId = client.id;
 
-  const notes = await db.note.findMany({
-    where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-
-  const decisions = await db.decision.findMany({
-    where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-
-  const handovers = await db.handover.findMany({
-    where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    take: 100,
-  });
-
-  const activeUsers = await db.user.findMany({
-    where: { workspaceId: session.workspaceId, status: "ACTIVE" },
-    select: { id: true, name: true, email: true },
-    orderBy: [{ role: "asc" }, { email: "asc" }],
-  });
+  const [notes, decisions, handovers, activeUsers, attachmentLinks] = await Promise.all([
+    db.note.findMany({
+      where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    db.decision.findMany({
+      where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    db.handover.findMany({
+      where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      take: 100,
+    }),
+    db.user.findMany({
+      where: { workspaceId: session.workspaceId, status: "ACTIVE" },
+      select: { id: true, name: true, email: true },
+      orderBy: [{ role: "asc" }, { email: "asc" }],
+    }),
+    db.attachmentLink.findMany({
+      where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
+      include: { attachment: true },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+  ]);
 
   const authorMap = new Map(activeUsers.map((user) => [user.id, user.name || user.email]));
-
-  const attachmentLinks = await db.attachmentLink.findMany({
-    where: { workspaceId: session.workspaceId, entityType: "Client", entityId: client.id },
-    include: { attachment: true },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const attachmentDownloadUrls = await buildAttachmentDownloadUrlMap(
+    attachmentLinks.map((link) => link.attachment.storageKey),
+  );
 
   const timeline = [
     ...notes.map((note) => ({ id: `note:${note.id}`, createdAt: note.createdAt, type: "Note" as const, title: "Note added", body: note.body, actorId: note.authorId })),
@@ -258,7 +260,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
         </Card>
       </section>
 
-      <ClientInvoicesSection clientId={client.id} clientName={client.name} />
+      {canManageVault ? <ClientInvoicesSection clientId={client.id} clientName={client.name} /> : null}
 
       {/* Assets & links */}
       <section className="space-y-3">
@@ -289,12 +291,13 @@ export default async function ClientCardPage({ params, searchParams }: { params:
       {/* Vault pointers */}
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-muted-foreground" /> Credentials (Vault pointers)</h2>
-        <CreateVaultPointerForm clientId={client.id} />
+        {canManageVault ? <CreateVaultPointerForm clientId={client.id} /> : null}
         <div className="grid gap-2">
           {client.vaultPointers.map((pointer) => (
             <VaultPointerActions
               key={pointer.id}
               clientId={client.id}
+              canManageVault={canManageVault}
               pointer={{ id: pointer.id, label: pointer.label, vaultItemId: pointer.vaultItemId, fieldName: pointer.fieldName, usernameHint: pointer.usernameHint ?? null }}
             />
           ))}
@@ -433,7 +436,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
         )}
         <div className="grid gap-2">
           {attachmentLinks.map((link) => {
-            const fileUrl = getAttachmentPublicUrl(link.attachment.storageKey);
+            const fileUrl = attachmentDownloadUrls.get(link.attachment.storageKey) ?? null;
             return (
               <Card key={link.id}>
                 <CardContent className="p-4">

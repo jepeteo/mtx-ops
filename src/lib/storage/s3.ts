@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 import { env } from "@/lib/env";
@@ -17,6 +17,18 @@ function requireStorageConfig() {
     secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
     bucket: env.STORAGE_BUCKET,
   };
+}
+
+function createS3Client(cfg: ReturnType<typeof requireStorageConfig>) {
+  return new S3Client({
+    region: cfg.region,
+    endpoint: cfg.endpoint,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: cfg.accessKeyId,
+      secretAccessKey: cfg.secretAccessKey,
+    },
+  });
 }
 
 function sanitizeFileName(fileName: string) {
@@ -48,15 +60,7 @@ export async function createAttachmentPresign(input: {
 
   const cfg = requireStorageConfig();
 
-  const client = new S3Client({
-    region: cfg.region,
-    endpoint: cfg.endpoint,
-    forcePathStyle: true,
-    credentials: {
-      accessKeyId: cfg.accessKeyId,
-      secretAccessKey: cfg.secretAccessKey,
-    },
-  });
+  const client = createS3Client(cfg);
 
   const command = new PutObjectCommand({
     Bucket: cfg.bucket,
@@ -79,15 +83,7 @@ export async function createAttachmentPresign(input: {
 export async function deleteAttachmentObject(storageKey: string) {
   const cfg = requireStorageConfig();
 
-  const client = new S3Client({
-    region: cfg.region,
-    endpoint: cfg.endpoint,
-    forcePathStyle: true,
-    credentials: {
-      accessKeyId: cfg.accessKeyId,
-      secretAccessKey: cfg.secretAccessKey,
-    },
-  });
+  const client = createS3Client(cfg);
 
   const command = new DeleteObjectCommand({
     Bucket: cfg.bucket,
@@ -95,6 +91,26 @@ export async function deleteAttachmentObject(storageKey: string) {
   });
 
   await client.send(command);
+}
+
+export async function headAttachmentObject(storageKey: string) {
+  const cfg = requireStorageConfig();
+  const client = createS3Client(cfg);
+  const command = new HeadObjectCommand({
+    Bucket: cfg.bucket,
+    Key: storageKey,
+  });
+  return client.send(command);
+}
+
+export async function getAttachmentSignedDownloadUrl(storageKey: string, expiresInSec = 3600) {
+  const cfg = requireStorageConfig();
+  const client = createS3Client(cfg);
+  const command = new GetObjectCommand({
+    Bucket: cfg.bucket,
+    Key: storageKey,
+  });
+  return getSignedUrl(client, command, { expiresIn: expiresInSec });
 }
 
 export function getAttachmentPublicUrl(storageKey: string) {
@@ -107,4 +123,20 @@ export function getAttachmentPublicUrl(storageKey: string) {
   }
 
   return null;
+}
+
+export async function getAttachmentDownloadUrl(storageKey: string) {
+  try {
+    return await getAttachmentSignedDownloadUrl(storageKey);
+  } catch {
+    return getAttachmentPublicUrl(storageKey);
+  }
+}
+
+export async function buildAttachmentDownloadUrlMap(storageKeys: string[]) {
+  const uniqueKeys = [...new Set(storageKeys)];
+  const entries = await Promise.all(
+    uniqueKeys.map(async (key) => [key, await getAttachmentDownloadUrl(key)] as const),
+  );
+  return new Map(entries);
 }

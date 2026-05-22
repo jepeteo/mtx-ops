@@ -5,7 +5,7 @@ import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
 import { entityExistsInWorkspace } from "@/lib/entities/exists";
 import { AttachmentEntityTypeSchema } from "@/lib/storage/entityTypes";
-import { getAttachmentPublicUrl } from "@/lib/storage/s3";
+import { getAttachmentDownloadUrl, headAttachmentObject } from "@/lib/storage/s3";
 
 const LinkSchema = z.object({
   attachmentId: z.string().uuid(),
@@ -67,6 +67,19 @@ export async function POST(req: Request) {
     return fail(auth.requestId, "CONFLICT", "Attachment is already linked to this entity", undefined, 409);
   }
 
+  try {
+    const head = await headAttachmentObject(attachment.storageKey);
+    const remoteSize = head.ContentLength ?? 0;
+    if (remoteSize <= 0 || remoteSize > 25 * 1024 * 1024) {
+      return fail(auth.requestId, "VALIDATION_ERROR", "Uploaded object size is invalid", undefined, 400);
+    }
+    if (attachment.sizeBytes > 0 && remoteSize !== attachment.sizeBytes) {
+      return fail(auth.requestId, "VALIDATION_ERROR", "Uploaded object size does not match declared size", undefined, 400);
+    }
+  } catch {
+    return fail(auth.requestId, "NOT_FOUND", "Uploaded object not found in storage", undefined, 404);
+  }
+
   const link = await db.attachmentLink.create({
     data: {
       workspaceId: auth.session.workspaceId,
@@ -98,7 +111,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const publicUrl = getAttachmentPublicUrl(attachment.storageKey);
+  const downloadUrl = await getAttachmentDownloadUrl(attachment.storageKey);
 
   return ok(
     auth.requestId,
@@ -110,7 +123,7 @@ export async function POST(req: Request) {
         entityId: link.entityId,
         label: link.label,
       },
-      publicUrl,
+      downloadUrl,
     },
     { status: 201 },
   );

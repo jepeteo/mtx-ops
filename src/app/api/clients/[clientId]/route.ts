@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuthApi } from "@/lib/auth/guards";
+import { requireAuthApi, requireRoleApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { logActivity } from "@/lib/activity/logActivity";
 import { fail, ok } from "@/lib/http/responses";
@@ -114,7 +114,7 @@ export async function PATCH(req: Request, { params }: { params: RouteParams }) {
 }
 
 export async function DELETE(req: Request, { params }: { params: RouteParams }) {
-  const auth = await requireAuthApi(req);
+  const auth = await requireRoleApi(req, "ADMIN");
   if ("errorResponse" in auth) return auth.errorResponse;
 
   const routeParams = await params;

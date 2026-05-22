@@ -14,20 +14,28 @@ export async function GET(req: Request) {
   const auth = await requireAuthApi(req);
   if ("errorResponse" in auth) return auth.errorResponse;
 
-  const clients = await db.client.findMany({
-    where: { workspaceId: auth.session.workspaceId },
-    orderBy: { updatedAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      pinnedNotes: true,
-      updatedAt: true,
-      createdAt: true,
-    },
-  });
+  const url = new URL(req.url);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? "100"), 1), 200);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? "0"), 0);
 
-  return ok(auth.requestId, { clients });
+  const [clients, total] = await Promise.all([
+    db.client.findMany({
+      where: { workspaceId: auth.session.workspaceId },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      skip: offset,
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        updatedAt: true,
+        createdAt: true,
+      },
+    }),
+    db.client.count({ where: { workspaceId: auth.session.workspaceId } }),
+  ]);
+
+  return ok(auth.requestId, { clients, total, limit, offset });
 }
 
 export async function POST(req: Request) {

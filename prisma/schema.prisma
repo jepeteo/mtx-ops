@@ -173,6 +173,8 @@ model Client {
   assetLinks    AssetLink[]
   vaultPointers VaultPointer[]
   invoices      Invoice[]
+
+  @@index([workspaceId])
 }
 
 model InvoiceSequence {
@@ -431,6 +433,8 @@ model Service {
   updatedAt  DateTime      @updatedAt
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
 }
 
 model AssetLink {

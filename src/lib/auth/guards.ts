@@ -1,18 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSession, getSessionFromApiRequest } from "./session";
 import type { Role } from "./types";
+import { hasMinRole } from "./roles";
 import { fail, getRequestId } from "@/lib/http/responses";
 import { db } from "@/lib/db/db";
 
-const ROLE_ORDER: Record<Role, number> = {
-  MEMBER: 1,
-  ADMIN: 2,
-  OWNER: 3,
-};
-
-export function hasMinRole(currentRole: Role, minRole: Role) {
-  return ROLE_ORDER[currentRole] >= ROLE_ORDER[minRole];
-}
+export { hasMinRole } from "./roles";
 
 export async function requireAuth() {
   const session = await getSession();
@@ -82,6 +75,10 @@ export async function requireAuthApi(req: Request) {
       workspaceId: user.workspaceId,
     },
   };
+}
+
+export async function requireAdminApi(req: Request) {
+  return requireRoleApi(req, "ADMIN");
 }
 
 export async function requireRoleApi(req: Request, minRole: Role) {

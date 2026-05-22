@@ -23,6 +23,18 @@ const EnvSchema = z.object({
   VAULTWARDEN_MASTER_PASSWORD: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
   VAULTWARDEN_CLIENT_ID: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
   VAULTWARDEN_CLIENT_SECRET: z.preprocess((v) => v || undefined, z.string().min(1).optional()),
+  UPSTASH_REDIS_REST_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  UPSTASH_REDIS_REST_TOKEN: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+}).superRefine((data, ctx) => {
+  const isRuntimeProduction =
+    data.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build";
+  if (isRuntimeProduction && (!data.CRON_SECRET || data.CRON_SECRET.length < 16)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["CRON_SECRET"],
+      message: "CRON_SECRET (min 16 chars) is required in production",
+    });
+  }
 });
 
 export const env = EnvSchema.parse({
@@ -46,4 +58,6 @@ export const env = EnvSchema.parse({
   VAULTWARDEN_MASTER_PASSWORD: process.env.VAULTWARDEN_MASTER_PASSWORD,
   VAULTWARDEN_CLIENT_ID: process.env.VAULTWARDEN_CLIENT_ID,
   VAULTWARDEN_CLIENT_SECRET: process.env.VAULTWARDEN_CLIENT_SECRET,
+  UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+  UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
 });

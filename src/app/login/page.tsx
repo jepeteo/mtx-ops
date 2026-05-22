@@ -1,6 +1,11 @@
 import { LoginForm } from "@/components/auth/LoginForm";
+import { safeAppRedirectPath } from "@/lib/http/safeRedirect";
 
-export default function LoginPage() {
+type Search = { next?: string };
+
+export default async function LoginPage({ searchParams }: { searchParams?: Promise<Search> }) {
+  const resolved = (await searchParams) ?? {};
+  const redirectTo = safeAppRedirectPath(resolved.next);
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-5">
       <div className="mb-8 flex items-center gap-3">
@@ -8,11 +13,11 @@ export default function LoginPage() {
           M
         </div>
         <div>
-          <div className="text-lg font-semibold">MTX Ops</div>
+          <h1 className="text-lg font-semibold">MTX Ops</h1>
           <div className="text-xs text-muted-foreground">Operations Console</div>
         </div>
       </div>
-      <LoginForm />
+      <LoginForm redirectTo={redirectTo} />
       <div className="mt-6 text-[11px] text-muted-foreground/60">&copy; {new Date().getFullYear()} MTX Studio</div>
     </div>
   );

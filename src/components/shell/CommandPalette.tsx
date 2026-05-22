@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Command } from "cmdk";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
@@ -29,12 +29,15 @@ export function CommandPalette({ actions }: { actions: Action[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="overflow-hidden p-0">
+      <DialogContent className="overflow-hidden p-0" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">Command menu</DialogTitle>
+        <DialogDescription className="sr-only">Search and jump to workspace pages and actions</DialogDescription>
         <Command className="flex w-full flex-col">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <Command.Input
               autoFocus
+              aria-label="Search commands"
               placeholder="Search clients, tasks, or actions…"
               className={cn(
                 "w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"

@@ -1,3 +1,4 @@
+import "server-only";
 import React from "react";
 import { Prisma } from "@prisma/client";
 import { Document, Page, Text, View, StyleSheet, Image as PdfImage, renderToBuffer } from "@react-pdf/renderer";
