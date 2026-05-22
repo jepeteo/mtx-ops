@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
 
-const PUBLIC_API_PREFIXES = ["/api/auth/login", "/api/cron/"];
+const PUBLIC_API_PREFIXES = [
+  "/api/auth/login",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+  "/api/cron/",
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

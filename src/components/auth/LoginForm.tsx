@@ -1,13 +1,20 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormFieldInput } from "@/components/ui/form-field";
 import { safeAppRedirectPath } from "@/lib/http/safeRedirect";
 
-export function LoginForm({ redirectTo = "/app" }: { redirectTo?: string }) {
+export function LoginForm({
+  redirectTo = "/app",
+  passwordReset = false,
+}: {
+  redirectTo?: string;
+  passwordReset?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -46,6 +53,14 @@ export function LoginForm({ redirectTo = "/app" }: { redirectTo?: string }) {
       </CardHeader>
       <CardContent>
         <form className="grid gap-4" onSubmit={onSubmit}>
+          {passwordReset ? (
+            <div
+              role="status"
+              className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2.5 text-xs font-medium text-foreground"
+            >
+              Your password was updated. Sign in with your new password.
+            </div>
+          ) : null}
           <FormFieldInput
             id="login-email"
             label="Email"
@@ -61,14 +76,24 @@ export function LoginForm({ redirectTo = "/app" }: { redirectTo?: string }) {
               {error}
             </div>
           ) : null}
-          <FormFieldInput
-            id="login-password"
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
+          <div className="grid gap-2">
+            <FormFieldInput
+              id="login-password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+            <div className="flex justify-end">
+              <Link
+                href="/login/forgot"
+                className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
           <Button type="submit" className="mt-1 w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}

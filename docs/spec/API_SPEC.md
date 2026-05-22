@@ -15,6 +15,8 @@
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+- `POST /api/auth/forgot-password` — body `{ email }`; returns `404` when no user exists for that email; sends Resend email when user is active (`RESEND_API_KEY` + `AUTH_EMAIL_FROM` or `INVOICE_EMAIL_FROM`)
+- `POST /api/auth/reset-password` — body `{ token, password }`; consumes one-time token from email link
 
 ## Clients
 - `GET /api/clients`

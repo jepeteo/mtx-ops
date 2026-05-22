@@ -1,11 +1,12 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { safeAppRedirectPath } from "@/lib/http/safeRedirect";
 
-type Search = { next?: string };
+type Search = { next?: string; reset?: string };
 
 export default async function LoginPage({ searchParams }: { searchParams?: Promise<Search> }) {
   const resolved = (await searchParams) ?? {};
   const redirectTo = safeAppRedirectPath(resolved.next);
+  const passwordReset = resolved.reset === "1";
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-5">
       <div className="mb-8 flex items-center gap-3">
@@ -17,7 +18,7 @@ export default async function LoginPage({ searchParams }: { searchParams?: Promi
           <div className="text-xs text-muted-foreground">Operations Console</div>
         </div>
       </div>
-      <LoginForm redirectTo={redirectTo} />
+      <LoginForm redirectTo={redirectTo} passwordReset={passwordReset} />
       <div className="mt-6 text-[11px] text-muted-foreground/60">&copy; {new Date().getFullYear()} MTX Studio</div>
     </div>
   );
