@@ -17,6 +17,10 @@ import { DeleteAssetLinkButton } from "@/components/clients/DeleteAssetLinkButto
 import { UploadAttachmentForm } from "@/components/attachments/UploadAttachmentForm";
 import { AttachmentLinkActions } from "@/components/attachments/AttachmentLinkActions";
 import { buildAttachmentDownloadUrlMap } from "@/lib/storage/s3";
+import {
+  getWorkspaceSettingsWithDefaults,
+  parseWorkspaceSettingsJson,
+} from "@/lib/workspace/workspaceSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ClientInvoicesSection } from "@/components/invoices/ClientInvoicesSection";
@@ -44,6 +48,14 @@ export default async function ClientCardPage({ params, searchParams }: { params:
 
   if (!client) notFound();
   const clientId = client.id;
+
+  const workspace = await db.workspace.findFirst({
+    where: { id: session.workspaceId },
+    select: { settings: true },
+  });
+  const defaultRenewalReminderDays = getWorkspaceSettingsWithDefaults(
+    parseWorkspaceSettingsJson(workspace?.settings),
+  ).general.defaultRenewalReminderDays;
 
   const [notes, decisions, handovers, activeUsers, attachmentLinks] = await Promise.all([
     db.note.findMany({
@@ -209,7 +221,7 @@ export default async function ClientCardPage({ params, searchParams }: { params:
       {/* Services & renewals */}
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold"><BarChart3 className="h-4 w-4 text-muted-foreground" /> Services &amp; renewals</h2>
-        <CreateServiceForm clientId={client.id} />
+        <CreateServiceForm clientId={client.id} defaultReminderRules={defaultRenewalReminderDays} />
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -242,7 +254,11 @@ export default async function ClientCardPage({ params, searchParams }: { params:
                         <div className="flex items-center gap-1">
                           <UpdateServiceReminderRules
                             serviceId={s.id}
-                            initialRules={Array.isArray(s.reminderRules) ? s.reminderRules.map((r) => Number(r)).filter((r) => Number.isInteger(r) && r >= 0 && r <= 365) : [60, 30, 14, 7]}
+                            initialRules={
+                              Array.isArray(s.reminderRules) && s.reminderRules.length > 0
+                                ? s.reminderRules.map((r) => Number(r)).filter((r) => Number.isInteger(r) && r >= 0 && r <= 365)
+                                : defaultRenewalReminderDays
+                            }
                           />
                           {s.status === "ACTIVE" ? <UpdateServiceStatusButton serviceId={s.id} nextStatus="CANCELED" /> : <UpdateServiceStatusButton serviceId={s.id} nextStatus="ACTIVE" />}
                           <DeleteServiceButton serviceId={s.id} />

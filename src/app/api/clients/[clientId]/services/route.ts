@@ -3,7 +3,11 @@ import { db } from "@/lib/db/db";
 import { requireAuthApi } from "@/lib/auth/guards";
 import { fail, ok } from "@/lib/http/responses";
 import { logActivity } from "@/lib/activity/logActivity";
-import { DEFAULT_SERVICE_REMINDER_RULES, normalizeReminderRules } from "@/lib/services/reminderRules";
+import { normalizeReminderRules } from "@/lib/services/reminderRules";
+import {
+  getWorkspaceSettingsWithDefaults,
+  parseWorkspaceSettingsJson,
+} from "@/lib/workspace/workspaceSettings";
 
 const ReminderRulesSchema = z.array(z.number().int().min(0).max(365)).min(1).max(12);
 
@@ -18,7 +22,7 @@ const ServiceCreateSchema = z.object({
   currency: z.string().min(3).max(3).optional().nullable(),
   autoRenew: z.boolean().default(false),
   payer: z.string().max(80).optional().nullable(),
-  reminderRules: ReminderRulesSchema.default([...DEFAULT_SERVICE_REMINDER_RULES]),
+  reminderRules: ReminderRulesSchema.optional(),
 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ clientId: string }> }) {
@@ -71,6 +75,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ clientI
     return fail(auth.requestId, "VALIDATION_ERROR", "Invalid service payload", parsed.error.flatten(), 400);
   }
 
+  const workspace = await db.workspace.findFirst({
+    where: { id: auth.session.workspaceId },
+    select: { settings: true },
+  });
+  const defaultReminderRules = getWorkspaceSettingsWithDefaults(
+    parseWorkspaceSettingsJson(workspace?.settings),
+  ).general.defaultRenewalReminderDays;
+
   const service = await db.service.create({
     data: {
       clientId: routeParams.clientId,
@@ -84,7 +96,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ clientI
       currency: parsed.data.currency ?? null,
       autoRenew: parsed.data.autoRenew,
       payer: parsed.data.payer ?? null,
-      reminderRules: normalizeReminderRules(parsed.data.reminderRules),
+      reminderRules: normalizeReminderRules(parsed.data.reminderRules ?? defaultReminderRules),
     },
   });
 

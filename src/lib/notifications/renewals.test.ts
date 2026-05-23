@@ -49,4 +49,16 @@ describe("notification renewal helpers", () => {
   it("uses expected default task reminder day buckets", () => {
     expect(TASK_DUE_REMINDER_DAYS).toEqual([7, 3, 1, 0]);
   });
+
+  it("builds inactivity dedupe keys with custom threshold and interval", () => {
+    expect(buildInactivityDedupeKey("client_1", 44, { thresholdDays: 45, intervalDays: 7 })).toBe(
+      "inactivity:client_1:bucket-0",
+    );
+    expect(buildInactivityDedupeKey("client_1", 45, { thresholdDays: 45, intervalDays: 7 })).toBe(
+      "inactivity:client_1:bucket-0",
+    );
+    expect(buildInactivityDedupeKey("client_1", 52, { thresholdDays: 45, intervalDays: 7 })).toBe(
+      "inactivity:client_1:bucket-1",
+    );
+  });
 });

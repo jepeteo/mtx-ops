@@ -1,7 +1,12 @@
-const DEFAULT_RULES = [60, 30, 14, 7];
+import {
+  DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS,
+  DEFAULT_INACTIVITY_THRESHOLD_DAYS,
+  DEFAULT_RENEWAL_REMINDER_DAYS,
+} from "@/lib/workspace/workspaceSettings";
+
 export const TASK_DUE_REMINDER_DAYS = [7, 3, 1, 0] as const;
-export const INACTIVITY_THRESHOLD_DAYS = 30;
-export const INACTIVITY_REMINDER_INTERVAL_DAYS = 7;
+export const INACTIVITY_THRESHOLD_DAYS = DEFAULT_INACTIVITY_THRESHOLD_DAYS;
+export const INACTIVITY_REMINDER_INTERVAL_DAYS = DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS;
 
 export function toUtcDayStart(value: Date) {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
@@ -12,12 +17,12 @@ export function daysUntil(fromDate: Date, toDate: Date) {
   return Math.floor((toUtcDayStart(toDate).getTime() - toUtcDayStart(fromDate).getTime()) / msPerDay);
 }
 
-export function parseReminderRules(value: unknown): number[] {
-  if (!Array.isArray(value)) return DEFAULT_RULES;
+export function parseReminderRules(value: unknown, defaultRules: number[] = [...DEFAULT_RENEWAL_REMINDER_DAYS]): number[] {
+  if (!Array.isArray(value)) return defaultRules;
   const parsed = value
     .map((item) => Number(item))
     .filter((item) => Number.isInteger(item) && item >= 0);
-  return parsed.length > 0 ? parsed : DEFAULT_RULES;
+  return parsed.length > 0 ? parsed : defaultRules;
 }
 
 export function buildRenewalDedupeKey(serviceId: string, remainingDays: number, renewalDate: Date) {
@@ -25,12 +30,18 @@ export function buildRenewalDedupeKey(serviceId: string, remainingDays: number, 
   return `renewal:${serviceId}:${remainingDays}:${dueAtDay}`;
 }
 
-export function buildInactivityDedupeKey(clientId: string, inactiveDays: number) {
+export function buildInactivityDedupeKey(
+  clientId: string,
+  inactiveDays: number,
+  opts?: { thresholdDays?: number; intervalDays?: number },
+) {
+  const thresholdDays = opts?.thresholdDays ?? INACTIVITY_THRESHOLD_DAYS;
+  const intervalDays = opts?.intervalDays ?? INACTIVITY_REMINDER_INTERVAL_DAYS;
   const normalizedInactiveDays = Math.max(0, Math.trunc(inactiveDays));
   const bucket =
-    normalizedInactiveDays < INACTIVITY_THRESHOLD_DAYS
+    normalizedInactiveDays < thresholdDays
       ? 0
-      : Math.floor((normalizedInactiveDays - INACTIVITY_THRESHOLD_DAYS) / INACTIVITY_REMINDER_INTERVAL_DAYS);
+      : Math.floor((normalizedInactiveDays - thresholdDays) / intervalDays);
   return `inactivity:${clientId}:bucket-${bucket}`;
 }
 

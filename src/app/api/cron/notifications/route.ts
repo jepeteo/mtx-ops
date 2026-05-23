@@ -7,10 +7,13 @@ import {
   buildRenewalDedupeKey,
   buildTaskDueDedupeKey,
   daysUntil,
-  INACTIVITY_THRESHOLD_DAYS,
   parseReminderRules,
   TASK_DUE_REMINDER_DAYS,
 } from "@/lib/notifications/renewals";
+import {
+  getWorkspaceSettingsWithDefaults,
+  parseWorkspaceSettingsJson,
+} from "@/lib/workspace/workspaceSettings";
 
 /**
  * Called by Vercel cron every 6 hours (see vercel.json).
@@ -22,6 +25,14 @@ export async function GET(req: Request) {
   if (cronAuthError) return cronAuthError;
 
   try {
+    const workspace = await db.workspace.findFirst({
+      select: { settings: true },
+    });
+    const workspaceSettings = getWorkspaceSettingsWithDefaults(parseWorkspaceSettingsJson(workspace?.settings));
+    const defaultRenewalReminderDays = workspaceSettings.general.defaultRenewalReminderDays;
+    const inactivityThresholdDays = workspaceSettings.general.inactivityThresholdDays;
+    const inactivityReminderIntervalDays = workspaceSettings.general.inactivityReminderIntervalDays;
+
     const services = await db.service.findMany({
       where: {
         status: "ACTIVE",
@@ -50,7 +61,7 @@ export async function GET(req: Request) {
     for (const service of services) {
       if (!service.renewalDate) continue;
 
-      const rules = parseReminderRules(service.reminderRules);
+      const rules = parseReminderRules(service.reminderRules, defaultRenewalReminderDays);
       const remainingDays = daysUntil(now, service.renewalDate);
 
       if (!rules.includes(remainingDays)) continue;
@@ -291,9 +302,12 @@ export async function GET(req: Request) {
       const lastActivityAt = latestByClient.get(client.id) ?? client.updatedAt;
       const inactiveDays = daysUntil(lastActivityAt, now);
 
-      if (inactiveDays < INACTIVITY_THRESHOLD_DAYS) continue;
+      if (inactiveDays < inactivityThresholdDays) continue;
 
-      const dedupeKey = buildInactivityDedupeKey(client.id, inactiveDays);
+      const dedupeKey = buildInactivityDedupeKey(client.id, inactiveDays, {
+        thresholdDays: inactivityThresholdDays,
+        intervalDays: inactivityReminderIntervalDays,
+      });
 
       newNotifications.push({
         workspaceId: client.workspaceId,

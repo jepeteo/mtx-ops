@@ -4,12 +4,20 @@ import { useState } from "react";
 
 type ServiceType = "DOMAIN" | "HOSTING" | "EMAIL" | "CDN" | "LICENSE" | "MONITORING" | "PAYMENT" | "CMS" | "OTHER";
 
-export function CreateServiceForm({ clientId }: { clientId: string }) {
+export function CreateServiceForm({
+  clientId,
+  defaultReminderRules,
+}: {
+  clientId: string;
+  defaultReminderRules?: number[];
+}) {
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
   const [type, setType] = useState<ServiceType>("OTHER");
   const [renewalDate, setRenewalDate] = useState("");
-  const [reminderRules, setReminderRules] = useState("60,30,14,7");
+  const [reminderRules, setReminderRules] = useState(
+    defaultReminderRules?.length ? defaultReminderRules.join(",") : "60,30,14,7",
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

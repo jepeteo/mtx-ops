@@ -94,6 +94,25 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
   }, [invoiceId]);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/workspace/settings", { cache: "no-store" });
+      const body = (await res.json().catch(() => null)) as
+        | {
+            ok: true;
+            data: { settings: { invoicing: { defaultTaxMode: "uk_vat" | "reverse_charge" | "none" } } };
+          }
+        | { ok: false }
+        | null;
+      if (cancelled || !res.ok || !body || !body.ok) return;
+      setNewTaxMode(body.data.settings.invoicing.defaultTaxMode);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (sendEmailOpen) {
       setSendIdempotencyKey(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `idem-${Date.now()}`);
       setSendTo(billingEmail || "");

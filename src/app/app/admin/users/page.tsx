@@ -25,7 +25,7 @@ export default async function AdminUsersPage() {
 				<Link href="/app/admin/users" className="active">Users</Link>
 				<Link href="/app/admin/operations">Operations</Link>
 				<Link href="/app/admin/activity">Activity</Link>
-				<Link href="/app/admin/invoice-settings">Invoice settings</Link>
+				<Link href="/app/admin/settings">Settings</Link>
 			</nav>
 
 			<CreateUserForm />

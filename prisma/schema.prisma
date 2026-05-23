@@ -97,6 +97,8 @@ model Workspace {
   name      String
   /// Issuer branding + bank details for invoices (JSON shape v1 — see invoiceIssuer Zod in app code).
   invoiceIssuer Json?
+  /// Operational defaults (JSON v1 — see workspaceSettings Zod in app code).
+  settings Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -23,6 +23,7 @@ export function CreateInvoiceDraftForm({
   const router = useRouter();
   const [clientId, setClientId] = useState(fixedClientId ?? clients[0]?.id ?? "");
   const [currency, setCurrency] = useState("GBP");
+  const [paymentTerms, setPaymentTerms] = useState("");
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
@@ -38,6 +39,30 @@ export function CreateInvoiceDraftForm({
       return clients[0]?.id ?? "";
     });
   }, [clients, fixedClientId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/workspace/settings", { cache: "no-store" });
+      const body = (await res.json().catch(() => null)) as
+        | {
+            ok: true;
+            data: {
+              settings: {
+                invoicing: { defaultCurrency: string; defaultPaymentTerms: string | null };
+              };
+            };
+          }
+        | { ok: false }
+        | null;
+      if (cancelled || !res.ok || !body || !body.ok) return;
+      setCurrency(body.data.settings.invoicing.defaultCurrency);
+      setPaymentTerms(body.data.settings.invoicing.defaultPaymentTerms ?? "");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,6 +80,7 @@ export function CreateInvoiceDraftForm({
       body: JSON.stringify({
         clientId,
         currency: currency.toUpperCase(),
+        paymentTerms: paymentTerms.trim() || null,
         issueDate: toIsoDate(issueDate),
         dueDate: toIsoDate(dueDate),
         lineItems: [],
@@ -88,13 +114,19 @@ export function CreateInvoiceDraftForm({
           ))}
         </select>
       )}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <input
           value={currency}
           onChange={(event) => setCurrency(event.target.value.toUpperCase())}
           className="form-input"
           maxLength={3}
           placeholder="Currency"
+        />
+        <input
+          value={paymentTerms}
+          onChange={(event) => setPaymentTerms(event.target.value)}
+          className="form-input"
+          placeholder="Payment terms"
         />
         <input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className="form-input" />
         <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="form-input" />
