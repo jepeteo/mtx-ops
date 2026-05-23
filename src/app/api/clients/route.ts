@@ -4,6 +4,8 @@ import { requireAuthApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { logActivity } from "@/lib/activity/logActivity";
 import { fail, ok } from "@/lib/http/responses";
+import type { Role } from "@/lib/auth/types";
+import { clientListFilter, getMemberVisibleClientIds } from "@/lib/clients/access";
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(200),
@@ -18,9 +20,16 @@ export async function GET(req: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? "100"), 1), 200);
   const offset = Math.max(Number(url.searchParams.get("offset") ?? "0"), 0);
 
+  const visibleClientIds = await getMemberVisibleClientIds(auth.session.userId, auth.session.workspaceId);
+  const where = clientListFilter({
+    workspaceId: auth.session.workspaceId,
+    role: auth.session.role as Role,
+    visibleClientIds,
+  });
+
   const [clients, total] = await Promise.all([
     db.client.findMany({
-      where: { workspaceId: auth.session.workspaceId },
+      where,
       orderBy: { updatedAt: "desc" },
       take: limit,
       skip: offset,
@@ -32,7 +41,7 @@ export async function GET(req: Request) {
         createdAt: true,
       },
     }),
-    db.client.count({ where: { workspaceId: auth.session.workspaceId } }),
+    db.client.count({ where }),
   ]);
 
   return ok(auth.requestId, { clients, total, limit, offset });

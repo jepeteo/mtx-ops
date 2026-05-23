@@ -8,11 +8,18 @@ import Link from "next/link";
 export default async function AdminUsersPage() {
 	const session = await requireRole("ADMIN");
 
-	const users = await db.user.findMany({
-		where: { workspaceId: session.workspaceId },
-		select: { id: true, email: true, name: true, role: true, status: true, createdAt: true },
-		orderBy: { createdAt: "desc" },
-	});
+	const [users, allClients] = await Promise.all([
+		db.user.findMany({
+			where: { workspaceId: session.workspaceId },
+			select: { id: true, email: true, name: true, role: true, status: true, createdAt: true },
+			orderBy: { createdAt: "desc" },
+		}),
+		db.client.findMany({
+			where: { workspaceId: session.workspaceId },
+			select: { id: true, name: true },
+			orderBy: { name: "asc" },
+		}),
+	]);
 
 	return (
 		<div className="space-y-6">
@@ -32,7 +39,7 @@ export default async function AdminUsersPage() {
 
 			<Card>
 				<CardContent className="p-0">
-					<AdminUsersTable actorId={session.userId} actorRole={session.role} users={users} />
+					<AdminUsersTable actorId={session.userId} actorRole={session.role} users={users} allClients={allClients} />
 				</CardContent>
 			</Card>
 		</div>

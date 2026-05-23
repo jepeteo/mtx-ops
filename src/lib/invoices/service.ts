@@ -39,6 +39,7 @@ export const CreateInvoiceSchema = z.object({
   notes: z.string().max(4_000).optional().nullable(),
   paymentTerms: z.string().max(400).optional().nullable(),
   lineItems: z.array(InvoiceLineInputSchema).max(500).optional().default([]),
+  sourceServiceId: z.string().uuid().optional(),
 });
 
 export const UpdateInvoiceSchema = z

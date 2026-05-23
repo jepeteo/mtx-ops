@@ -1,6 +1,7 @@
 import { requireAuthApi } from "@/lib/auth/guards";
 import { fail, ok } from "@/lib/http/responses";
 import { db } from "@/lib/db/db";
+import { canSeeAllClients, getMemberVisibleClientIds } from "@/lib/clients/access";
 
 const MAX_QUERY_LENGTH = 100;
 
@@ -19,11 +20,17 @@ export async function GET(req: Request) {
     return fail(auth.requestId, "VALIDATION_ERROR", "Search query is too long", { maxLength: MAX_QUERY_LENGTH }, 400);
   }
 
-  const [clients, projects, tasks, notes, services, assetLinks] = await Promise.all([
+  const visibleClientIds = await getMemberVisibleClientIds(auth.session.userId, auth.session.workspaceId);
+  const memberClientFilter = canSeeAllClients(auth.session.role)
+    ? {}
+    : { id: { in: visibleClientIds.length > 0 ? visibleClientIds : ["00000000-0000-0000-0000-000000000000"] } };
+
+  const [clients, projects, tasks, notes, services, assetLinks, contacts] = await Promise.all([
     db.client.findMany({
       where: {
         workspaceId: auth.session.workspaceId,
         name: { contains: query, mode: "insensitive" },
+        ...memberClientFilter,
       },
       select: {
         id: true,
@@ -37,6 +44,7 @@ export async function GET(req: Request) {
     db.project.findMany({
       where: {
         workspaceId: auth.session.workspaceId,
+        ...(!canSeeAllClients(auth.session.role) ? { clientId: { in: visibleClientIds } } : {}),
         OR: [
           { name: { contains: query, mode: "insensitive" } },
           { keyPrefix: { contains: query.toUpperCase(), mode: "insensitive" } },
@@ -56,6 +64,9 @@ export async function GET(req: Request) {
       where: {
         workspaceId: auth.session.workspaceId,
         title: { contains: query, mode: "insensitive" },
+        ...(!canSeeAllClients(auth.session.role)
+          ? { OR: [{ clientId: { in: visibleClientIds } }, { clientId: null }] }
+          : {}),
       },
       select: {
         id: true,
@@ -92,6 +103,7 @@ export async function GET(req: Request) {
       where: {
         client: {
           workspaceId: auth.session.workspaceId,
+          ...memberClientFilter,
         },
         OR: [
           { name: { contains: query, mode: "insensitive" } },
@@ -118,6 +130,7 @@ export async function GET(req: Request) {
       where: {
         client: {
           workspaceId: auth.session.workspaceId,
+          ...memberClientFilter,
         },
         OR: [
           { label: { contains: query, mode: "insensitive" } },
@@ -141,6 +154,29 @@ export async function GET(req: Request) {
       take: 20,
       orderBy: { updatedAt: "desc" },
     }),
+    db.contact.findMany({
+      where: {
+        client: {
+          workspaceId: auth.session.workspaceId,
+          ...memberClientFilter,
+        },
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { role: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        clientId: true,
+        client: { select: { name: true } },
+      },
+      take: 20,
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   return ok(auth.requestId, {
@@ -151,5 +187,6 @@ export async function GET(req: Request) {
     notes,
     services,
     assetLinks,
+    contacts,
   });
 }

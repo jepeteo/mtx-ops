@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 
 type ClientOption = { id: string; name: string };
 
+export type InvoiceLinePreset = {
+  description: string;
+  quantity: string;
+  unitPriceMinor: number;
+  taxMode?: "uk_vat" | "reverse_charge" | "none";
+  taxRateBps?: number;
+};
+
 function toIsoDate(dateValue: string) {
   return new Date(`${dateValue}T00:00:00.000Z`).toISOString();
 }
@@ -14,10 +22,14 @@ function toIsoDate(dateValue: string) {
 export function CreateInvoiceDraftForm({
   clients,
   fixedClientId,
+  sourceServiceId,
+  initialLineItems,
   onCreated,
 }: {
   clients: ClientOption[];
   fixedClientId?: string;
+  sourceServiceId?: string;
+  initialLineItems?: InvoiceLinePreset[];
   onCreated?: (invoice: InvoiceRecord) => void;
 }) {
   const router = useRouter();
@@ -26,6 +38,8 @@ export function CreateInvoiceDraftForm({
   const [paymentTerms, setPaymentTerms] = useState("");
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [defaultTaxMode, setDefaultTaxMode] = useState<"uk_vat" | "reverse_charge" | "none">("none");
+  const [billingEmail, setBillingEmail] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +63,11 @@ export function CreateInvoiceDraftForm({
             ok: true;
             data: {
               settings: {
-                invoicing: { defaultCurrency: string; defaultPaymentTerms: string | null };
+                invoicing: {
+                  defaultCurrency: string;
+                  defaultPaymentTerms: string | null;
+                  defaultTaxMode: "uk_vat" | "reverse_charge" | "none";
+                };
               };
             };
           }
@@ -58,11 +76,30 @@ export function CreateInvoiceDraftForm({
       if (cancelled || !res.ok || !body || !body.ok) return;
       setCurrency(body.data.settings.invoicing.defaultCurrency);
       setPaymentTerms(body.data.settings.invoicing.defaultPaymentTerms ?? "");
+      setDefaultTaxMode(body.data.settings.invoicing.defaultTaxMode ?? "none");
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(`/api/clients/${clientId}/contacts`, { cache: "no-store" });
+      const body = (await res.json().catch(() => null)) as
+        | { ok: true; data: { contacts: Array<{ isPrimary: boolean; email: string | null }> } }
+        | { ok: false }
+        | null;
+      if (cancelled || !res.ok || !body || !body.ok) return;
+      const primary = body.data.contacts.find((c) => c.isPrimary && c.email);
+      setBillingEmail(primary?.email ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,6 +111,15 @@ export function CreateInvoiceDraftForm({
     setSaving(true);
     setError(null);
 
+    const lineItems =
+      initialLineItems?.map((line) => ({
+        description: line.description,
+        quantity: line.quantity,
+        unitPriceMinor: line.unitPriceMinor,
+        taxMode: line.taxMode ?? defaultTaxMode,
+        taxRateBps: line.taxRateBps ?? 0,
+      })) ?? [];
+
     const response = await fetch("/api/invoices", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -83,7 +129,9 @@ export function CreateInvoiceDraftForm({
         paymentTerms: paymentTerms.trim() || null,
         issueDate: toIsoDate(issueDate),
         dueDate: toIsoDate(dueDate),
-        lineItems: [],
+        billingEmail: billingEmail || undefined,
+        lineItems,
+        ...(sourceServiceId ? { sourceServiceId } : {}),
       }),
     });
 
@@ -131,7 +179,15 @@ export function CreateInvoiceDraftForm({
         <input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className="form-input" />
         <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="form-input" />
       </div>
-      <p className="text-xs text-muted-foreground">Billing details are taken from the client profile (you can edit them on the invoice).</p>
+      <p className="text-xs text-muted-foreground">
+        Billing details are taken from the client profile
+        {billingEmail ? ` (email: ${billingEmail})` : ""}. You can edit them on the invoice after creation.
+      </p>
+      {initialLineItems && initialLineItems.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          First line: {initialLineItems[0]?.description}
+        </p>
+      ) : null}
       <Button type="submit" className="w-fit" disabled={saving}>
         {saving ? "Creating..." : "Create draft"}
       </Button>

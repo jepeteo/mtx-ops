@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
+import { clientListFilter, getMemberVisibleClientIds } from "@/lib/clients/access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Plus } from "lucide-react";
 
 export default async function ClientsPage() {
   const session = await requireSession();
+  const visibleClientIds = await getMemberVisibleClientIds(session.userId, session.workspaceId);
   const clients = await db.client.findMany({
-    where: { workspaceId: session.workspaceId },
+    where: clientListFilter({
+      workspaceId: session.workspaceId,
+      role: session.role,
+      visibleClientIds,
+    }),
     orderBy: { updatedAt: "desc" },
     take: 50,
   });

@@ -1,5 +1,7 @@
 import { requireSession } from "@/lib/auth/guards";
+import { hasMinRole } from "@/lib/auth/roles";
 import { db } from "@/lib/db/db";
+import { assertClientVisible } from "@/lib/clients/access";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CreateServiceForm } from "@/components/clients/CreateServiceForm";
@@ -24,6 +26,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ClientInvoicesSection } from "@/components/invoices/ClientInvoicesSection";
+import { CreateInvoiceFromServiceButton } from "@/components/invoices/CreateInvoiceFromServiceButton";
+import { ClientContactsSection } from "@/components/clients/ClientContactsSection";
+import { ClientAgencyServicesSection } from "@/components/clients/ClientAgencyServicesSection";
 import { ArrowLeft, Pencil, ExternalLink, Pin, BarChart3, FileText, Lightbulb, ArrowRightLeft, Clock, Paperclip, ShieldCheck, Link2 } from "lucide-react";
 
 type Search = {
@@ -35,8 +40,18 @@ export default async function ClientCardPage({ params, searchParams }: { params:
   const session = await requireSession();
   const routeParams = await params;
   const resolvedSearch = (await searchParams) ?? {};
-  const canManageAttachments = session.role === "OWNER" || session.role === "ADMIN";
+  const canManageAttachments = hasMinRole(session.role, "ADMIN");
   const canManageVault = canManageAttachments;
+  const canManageInvoices = canManageAttachments;
+
+  const visible = await assertClientVisible({
+    clientId: routeParams.clientId,
+    workspaceId: session.workspaceId,
+    userId: session.userId,
+    role: session.role,
+  });
+  if (!visible) notFound();
+
   const client = await db.client.findFirst({
     where: { id: routeParams.clientId, workspaceId: session.workspaceId },
     include: {
@@ -261,6 +276,15 @@ export default async function ClientCardPage({ params, searchParams }: { params:
                             }
                           />
                           {s.status === "ACTIVE" ? <UpdateServiceStatusButton serviceId={s.id} nextStatus="CANCELED" /> : <UpdateServiceStatusButton serviceId={s.id} nextStatus="ACTIVE" />}
+                          {canManageInvoices ? (
+                            <CreateInvoiceFromServiceButton
+                              clientId={client.id}
+                              clientName={client.name}
+                              serviceId={s.id}
+                              serviceName={s.name}
+                              serviceProvider={s.provider}
+                            />
+                          ) : null}
                           <DeleteServiceButton serviceId={s.id} />
                         </div>
                       </td>
@@ -276,7 +300,11 @@ export default async function ClientCardPage({ params, searchParams }: { params:
         </Card>
       </section>
 
-      {canManageVault ? <ClientInvoicesSection clientId={client.id} clientName={client.name} /> : null}
+      <ClientContactsSection clientId={client.id} />
+
+      <ClientAgencyServicesSection clientId={client.id} />
+
+      {canManageInvoices ? <ClientInvoicesSection clientId={client.id} clientName={client.name} /> : null}
 
       {/* Assets & links */}
       <section className="space-y-3">

@@ -93,6 +93,19 @@ enum InvoiceTaxMode {
   none
 }
 
+enum AgencyServiceBillingCadence {
+  monthly
+  quarterly
+  annual
+  ad_hoc
+}
+
+enum AgencyServiceStatus {
+  active
+  paused
+  ended
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -119,6 +132,7 @@ model Workspace {
   invoices    Invoice[]
   invoiceSequences InvoiceSequence[]
   idempotencyRecords IdempotencyRecord[]
+  clientMemberAccess ClientMemberAccess[]
 }
 
 /// Request idempotency for safe retries (e.g. invoice email send). Stores only a safe response snapshot, not full bodies or attachments.
@@ -153,6 +167,7 @@ model User {
 
   workspace            Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   passwordResetTokens  PasswordResetToken[]
+  clientMemberAccess   ClientMemberAccess[]
 }
 
 model PasswordResetToken {
@@ -186,13 +201,73 @@ model Client {
 
   workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   services      Service[]
+  agencyServices AgencyService[]
+  contacts      Contact[]
   projects      Project[]
   tasks         Task[]
   assetLinks    AssetLink[]
   vaultPointers VaultPointer[]
   invoices      Invoice[]
+  memberAccess  ClientMemberAccess[]
 
   @@index([workspaceId])
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  clientId  String
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  isPrimary Boolean  @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([clientId, isPrimary])
+}
+
+model AgencyService {
+  id             String                      @id @default(uuid())
+  clientId       String
+  name           String
+  description    String?
+  billingCadence AgencyServiceBillingCadence
+  amountMinor    Int?
+  currency       String?
+  status         AgencyServiceStatus         @default(active)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  projectId      String?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+
+  client  Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([clientId, status])
+  @@index([projectId])
+}
+
+model ClientMemberAccess {
+  id          String   @id @default(uuid())
+  workspaceId String
+  clientId    String
+  userId      String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, userId])
+  @@index([workspaceId])
+  @@index([userId])
 }
 
 model InvoiceSequence {
@@ -279,6 +354,7 @@ model Project {
   client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   milestones Milestone[]
   tasks     Task[]
+  agencyServices AgencyService[]
 
   @@index([workspaceId, status, updatedAt])
   @@index([clientId, updatedAt])

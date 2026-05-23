@@ -31,6 +31,7 @@ type ApiDeps = {
   db: {
     workspace: { findFirst: (...args: any[]) => Promise<any> };
     client: { findFirst: (...args: any[]) => Promise<any> };
+    service: { findFirst: (...args: any[]) => Promise<any> };
     invoice: {
       findMany: (...args: any[]) => Promise<any[]>;
       findFirst: (...args: any[]) => Promise<any>;
@@ -194,6 +195,28 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
     return deps.fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: parsed.data.clientId }, 404);
   }
 
+  let sourceService: { id: string; name: string; provider: string } | null = null;
+  if (parsed.data.sourceServiceId) {
+    const scopedService = await deps.db.service.findFirst({
+      where: {
+        id: parsed.data.sourceServiceId,
+        clientId: parsed.data.clientId,
+        client: { workspaceId: auth.session.workspaceId },
+      },
+      select: { id: true, name: true, provider: true },
+    });
+    if (!scopedService) {
+      return deps.fail(
+        auth.requestId,
+        "NOT_FOUND",
+        "Service not found for this client",
+        { sourceServiceId: parsed.data.sourceServiceId },
+        404,
+      );
+    }
+    sourceService = scopedService;
+  }
+
   const billing = resolveBillingForCreate(parsed.data, client);
 
   try {
@@ -269,7 +292,7 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
     await deps.logActivity({
       workspaceId: auth.session.workspaceId,
       actorId: auth.session.userId,
-      action: "invoice.create",
+      action: sourceService ? "invoice.draft.from_service" : "invoice.create",
       entityType: "Invoice",
       entityId: created.id,
       metadata: {
@@ -277,6 +300,13 @@ export async function createInvoiceController(req: Request, deps: ApiDeps) {
         invoiceNumber: created.invoiceNumber,
         status: created.status,
         totalMinor: created.totalMinor,
+        ...(sourceService
+          ? {
+              serviceId: sourceService.id,
+              serviceName: sourceService.name,
+              serviceProvider: sourceService.provider,
+            }
+          : {}),
       },
     });
 

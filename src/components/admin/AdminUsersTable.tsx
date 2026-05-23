@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
+import { MemberClientAccessPanel } from "@/components/admin/MemberClientAccessPanel";
 
 type Role = "OWNER" | "ADMIN" | "MEMBER";
 type UserStatus = "ACTIVE" | "DISABLED";
@@ -16,10 +17,13 @@ type UserRecord = {
   createdAt: Date;
 };
 
+type ClientOption = { id: string; name: string };
+
 type AdminUsersTableProps = {
   actorId: string;
   actorRole: Role;
   users: UserRecord[];
+  allClients: ClientOption[];
 };
 
 type ErrorEnvelope = {
@@ -56,10 +60,12 @@ function UserActionsRow({
   user,
   actorRole,
   actorId,
+  allClients,
 }: {
   user: UserRecord;
   actorRole: Role;
   actorId: string;
+  allClients: ClientOption[];
 }) {
   const [nextRole, setNextRole] = useState<Role>(user.role);
   const [savingRole, setSavingRole] = useState(false);
@@ -163,12 +169,15 @@ function UserActionsRow({
           </Button>
         </div>
         {error ? <div className="mt-1 text-xs text-destructive">{error}</div> : null}
+        {userRole === "MEMBER" && canManage ? (
+          <MemberClientAccessPanel userId={user.id} userEmail={user.email} allClients={allClients} />
+        ) : null}
       </td>
     </tr>
   );
 }
 
-export function AdminUsersTable({ actorId, actorRole, users }: AdminUsersTableProps) {
+export function AdminUsersTable({ actorId, actorRole, users, allClients }: AdminUsersTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="data-table">
@@ -184,7 +193,7 @@ export function AdminUsersTable({ actorId, actorRole, users }: AdminUsersTablePr
         </thead>
         <tbody>
           {users.map((user) => (
-            <UserActionsRow key={user.id} user={user} actorRole={actorRole} actorId={actorId} />
+            <UserActionsRow key={user.id} user={user} actorRole={actorRole} actorId={actorId} allClients={allClients} />
           ))}
           {users.length === 0 && (
             <tr><td colSpan={6} className="empty-state">No users found.</td></tr>

@@ -4,6 +4,7 @@ import { requireAuthApi, requireRoleApi } from "@/lib/auth/guards";
 import { db } from "@/lib/db/db";
 import { logActivity } from "@/lib/activity/logActivity";
 import { fail, ok } from "@/lib/http/responses";
+import { assertClientVisible } from "@/lib/clients/access";
 
 const UpdateSchema = z.object({
   name: z.string().min(1).max(200),
@@ -85,6 +86,16 @@ export async function GET(req: Request, { params }: { params: RouteParams }) {
   });
 
   if (!client) {
+    return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: routeParams.clientId }, 404);
+  }
+
+  const visible = await assertClientVisible({
+    clientId: client.id,
+    workspaceId: auth.session.workspaceId,
+    userId: auth.session.userId,
+    role: auth.session.role,
+  });
+  if (!visible) {
     return fail(auth.requestId, "NOT_FOUND", "Client not found", { clientId: routeParams.clientId }, 404);
   }
 

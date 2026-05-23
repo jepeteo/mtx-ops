@@ -20,6 +20,7 @@ import {
   Landmark,
   ChevronRight,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CommandPalette } from "./CommandPalette";
@@ -39,6 +40,7 @@ const mainNav = [
 const toolsNav = [
   { href: "/app/search", label: "Search", icon: Search },
   { href: "/app/notifications", label: "Notifications", icon: Bell },
+  { href: "/app/digest", label: "Weekly digest", icon: BarChart3 },
 ];
 
 const adminNav = [

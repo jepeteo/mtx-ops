@@ -27,6 +27,9 @@ export async function GET(req: Request) {
       users,
       clients,
       services,
+      contacts,
+      agencyServices,
+      clientMemberAccess,
       assetLinks,
       projects,
       milestones,
@@ -70,6 +73,18 @@ export async function GET(req: Request) {
       }),
       db.service.findMany({
         where: { client: { workspaceId } },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      }),
+      db.contact.findMany({
+        where: { client: { workspaceId } },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      }),
+      db.agencyService.findMany({
+        where: { client: { workspaceId } },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      }),
+      db.clientMemberAccess.findMany({
+        where: { workspaceId },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       }),
       db.assetLink.findMany({
@@ -148,6 +163,9 @@ export async function GET(req: Request) {
       users,
       clients,
       services,
+      contacts,
+      agencyServices,
+      clientMemberAccess,
       assetLinks,
       projects,
       milestones,
