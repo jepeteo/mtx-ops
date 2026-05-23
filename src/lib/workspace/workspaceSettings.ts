@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { env } from "@/lib/env";
 
 export const DEFAULT_RENEWAL_REMINDER_DAYS = [60, 30, 14, 7] as const;
+export const DEFAULT_TASK_DUE_REMINDER_DAYS = [7, 3, 1, 0] as const;
 export const DEFAULT_INACTIVITY_THRESHOLD_DAYS = 30;
 export const DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS = 7;
 export const DEFAULT_INVOICE_CURRENCY = "GBP";
@@ -12,6 +13,7 @@ const reminderDaySchema = z.number().int().min(0).max(365);
 
 const WorkspaceSettingsGeneralSchema = z.object({
   defaultRenewalReminderDays: z.array(reminderDaySchema).min(1).max(20).optional(),
+  defaultTaskDueReminderDays: z.array(reminderDaySchema).min(1).max(20).optional(),
   inactivityThresholdDays: z.number().int().min(7).max(365).optional(),
   inactivityReminderIntervalDays: z.number().int().min(1).max(90).optional(),
 });
@@ -39,6 +41,7 @@ export type ResolvedWorkspaceSettingsV1 = {
   v: 1;
   general: {
     defaultRenewalReminderDays: number[];
+    defaultTaskDueReminderDays: number[];
     inactivityThresholdDays: number;
     inactivityReminderIntervalDays: number;
   };
@@ -113,6 +116,10 @@ function mergeGeneral(
       patch.defaultRenewalReminderDays !== undefined
         ? normalizeReminderDays(patch.defaultRenewalReminderDays)
         : base.defaultRenewalReminderDays,
+    defaultTaskDueReminderDays:
+      patch.defaultTaskDueReminderDays !== undefined
+        ? normalizeReminderDays(patch.defaultTaskDueReminderDays)
+        : base.defaultTaskDueReminderDays,
     inactivityThresholdDays:
       patch.inactivityThresholdDays !== undefined ? patch.inactivityThresholdDays : base.inactivityThresholdDays,
     inactivityReminderIntervalDays:
@@ -146,6 +153,9 @@ export function getWorkspaceSettingsWithDefaults(
       defaultRenewalReminderDays: normalizeReminderDays(
         general?.defaultRenewalReminderDays ?? [...DEFAULT_RENEWAL_REMINDER_DAYS],
       ),
+      defaultTaskDueReminderDays: normalizeReminderDays(
+        general?.defaultTaskDueReminderDays ?? [...DEFAULT_TASK_DUE_REMINDER_DAYS],
+      ),
       inactivityThresholdDays: general?.inactivityThresholdDays ?? DEFAULT_INACTIVITY_THRESHOLD_DAYS,
       inactivityReminderIntervalDays:
         general?.inactivityReminderIntervalDays ?? DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS,
@@ -170,6 +180,7 @@ export function mergeWorkspaceSettings(
     v: 1,
     general: {
       defaultRenewalReminderDays: nextGeneral.defaultRenewalReminderDays,
+      defaultTaskDueReminderDays: nextGeneral.defaultTaskDueReminderDays,
       inactivityThresholdDays: nextGeneral.inactivityThresholdDays,
       inactivityReminderIntervalDays: nextGeneral.inactivityReminderIntervalDays,
     },

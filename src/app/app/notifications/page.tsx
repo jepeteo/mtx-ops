@@ -14,7 +14,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   const session = await requireSession();
   const resolvedSearch = (await searchParams) ?? {};
 
-  const allowedTypes = new Set(["RENEWAL", "TASK", "INACTIVITY", "HANDOVER"]);
+  const allowedTypes = new Set(["RENEWAL", "TASK", "INACTIVITY", "HANDOVER", "INVOICE_OVERDUE"]);
   const allowedStatus = new Set(["OPEN", "SNOOZED", "HANDLED"]);
 
   const selectedType = resolvedSearch.type && allowedTypes.has(resolvedSearch.type) ? resolvedSearch.type : undefined;
@@ -29,6 +29,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     { value: "TASK", label: "Task due" },
     { value: "INACTIVITY", label: "Inactivity" },
     { value: "HANDOVER", label: "Handovers" },
+    { value: "INVOICE_OVERDUE", label: "Overdue invoices" },
   ];
 
   const statusTabs: Array<{ value: string; label: string }> = [
@@ -50,7 +51,9 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     db.notification.findMany({
       where: {
         workspaceId: session.workspaceId,
-        ...(selectedType ? { type: selectedType as "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER" } : {}),
+        ...(selectedType
+          ? { type: selectedType as "RENEWAL" | "TASK" | "INACTIVITY" | "HANDOVER" | "INVOICE_OVERDUE" }
+          : {}),
         ...(selectedStatus ? { status: selectedStatus as "OPEN" | "SNOOZED" | "HANDLED" } : {}),
       },
       orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "desc" }],
@@ -79,7 +82,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-semibold">Notifications</h1>
-        <p className="text-sm text-muted-foreground">Renewals, due dates, inactivity, and handovers in one place</p>
+        <p className="text-sm text-muted-foreground">Renewals, due dates, inactivity, handovers, and overdue invoices</p>
       </div>
 
       <div className="flex flex-wrap items-start gap-6">

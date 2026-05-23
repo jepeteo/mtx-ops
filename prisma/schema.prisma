@@ -71,6 +71,7 @@ enum NotificationType {
   TASK
   INACTIVITY
   HANDOVER
+  INVOICE_OVERDUE
 }
 
 enum NotificationStatus {

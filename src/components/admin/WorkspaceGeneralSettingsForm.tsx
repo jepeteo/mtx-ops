@@ -16,6 +16,7 @@ export function WorkspaceGeneralSettingsForm() {
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
   const [renewalDays, setRenewalDays] = useState("");
+  const [taskDueDays, setTaskDueDays] = useState("");
   const [inactivityThreshold, setInactivityThreshold] = useState("");
   const [inactivityInterval, setInactivityInterval] = useState("");
 
@@ -23,6 +24,7 @@ export function WorkspaceGeneralSettingsForm() {
     if (!data) return;
     setName(data.name);
     setRenewalDays(data.settings.general.defaultRenewalReminderDays.join(","));
+    setTaskDueDays(data.settings.general.defaultTaskDueReminderDays.join(","));
     setInactivityThreshold(String(data.settings.general.inactivityThresholdDays));
     setInactivityInterval(String(data.settings.general.inactivityReminderIntervalDays));
   }, [data]);
@@ -30,15 +32,22 @@ export function WorkspaceGeneralSettingsForm() {
   async function save() {
     if (!data) return;
 
-    const parsedRenewal = renewalDays
-      .split(",")
-      .map((v) => Number(v.trim()))
-      .filter((v) => Number.isInteger(v) && v >= 0 && v <= 365);
+    const parseReminderDayList = (raw: string, label: string) => {
+      const parsed = raw
+        .split(",")
+        .map((v) => Number(v.trim()))
+        .filter((v) => Number.isInteger(v) && v >= 0 && v <= 365);
+      if (parsed.length === 0) {
+        toast.error(`Enter at least one ${label} (0–365).`);
+      }
+      return parsed;
+    };
 
-    if (parsedRenewal.length === 0) {
-      toast.error("Enter at least one renewal reminder day (0–365).");
-      return;
-    }
+    const parsedRenewal = parseReminderDayList(renewalDays, "renewal reminder day");
+    if (parsedRenewal.length === 0) return;
+
+    const parsedTaskDue = parseReminderDayList(taskDueDays, "task due reminder day");
+    if (parsedTaskDue.length === 0) return;
 
     const threshold = Number(inactivityThreshold);
     const interval = Number(inactivityInterval);
@@ -66,6 +75,7 @@ export function WorkspaceGeneralSettingsForm() {
         settings: {
           general: {
             defaultRenewalReminderDays: parsedRenewal,
+            defaultTaskDueReminderDays: parsedTaskDue,
             inactivityThresholdDays: threshold,
             inactivityReminderIntervalDays: interval,
           },
@@ -108,6 +118,17 @@ export function WorkspaceGeneralSettingsForm() {
         placeholder="60,30,14,7"
       />
       <p className="-mt-4 text-xs text-muted-foreground">Comma-separated days before renewal (sorted descending, unique integers 0–365).</p>
+
+      <FormFieldInput
+        id="task-due-days"
+        label="Default task due reminder days"
+        value={taskDueDays}
+        onChange={(e) => setTaskDueDays(e.target.value)}
+        placeholder="7,3,1,0"
+      />
+      <p className="-mt-4 text-xs text-muted-foreground">
+        Days before task due date (include 0 for due today). First overdue day always notifies once.
+      </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <FormFieldInput

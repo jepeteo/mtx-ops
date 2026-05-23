@@ -5,6 +5,7 @@ import {
   DEFAULT_INVOICE_CURRENCY,
   DEFAULT_INVOICE_TAX_MODE,
   DEFAULT_RENEWAL_REMINDER_DAYS,
+  DEFAULT_TASK_DUE_REMINDER_DAYS,
   getWorkspaceSettingsWithDefaults,
   mergeWorkspaceSettings,
   normalizeReminderDays,
@@ -17,6 +18,7 @@ describe("workspaceSettings", () => {
       v: 1,
       general: {
         defaultRenewalReminderDays: [...DEFAULT_RENEWAL_REMINDER_DAYS],
+        defaultTaskDueReminderDays: [...DEFAULT_TASK_DUE_REMINDER_DAYS],
         inactivityThresholdDays: DEFAULT_INACTIVITY_THRESHOLD_DAYS,
         inactivityReminderIntervalDays: DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS,
       },

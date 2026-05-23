@@ -4,8 +4,10 @@ import {
   INACTIVITY_THRESHOLD_DAYS,
   TASK_DUE_REMINDER_DAYS,
   buildInactivityDedupeKey,
+  buildInvoiceOverdueDedupeKey,
   buildRenewalDedupeKey,
   buildTaskDueDedupeKey,
+  INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS,
   daysUntil,
   parseReminderRules,
   toUtcDayStart,
@@ -48,6 +50,15 @@ describe("notification renewal helpers", () => {
 
   it("uses expected default task reminder day buckets", () => {
     expect(TASK_DUE_REMINDER_DAYS).toEqual([7, 3, 1, 0]);
+  });
+
+  it("builds invoice overdue dedupe keys with weekly buckets", () => {
+    expect(buildInvoiceOverdueDedupeKey("inv_1", 0)).toBe("invoice-overdue:inv_1:pending");
+    expect(buildInvoiceOverdueDedupeKey("inv_1", 1)).toBe("invoice-overdue:inv_1:bucket-0");
+    expect(buildInvoiceOverdueDedupeKey("inv_1", 7)).toBe("invoice-overdue:inv_1:bucket-0");
+    expect(buildInvoiceOverdueDedupeKey("inv_1", 8, { intervalDays: INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS })).toBe(
+      "invoice-overdue:inv_1:bucket-1",
+    );
   });
 
   it("builds inactivity dedupe keys with custom threshold and interval", () => {

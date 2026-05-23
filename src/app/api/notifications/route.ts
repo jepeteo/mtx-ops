@@ -4,7 +4,7 @@ import { fail, ok } from "@/lib/http/responses";
 import { z } from "zod";
 
 const QuerySchema = z.object({
-  type: z.enum(["RENEWAL", "TASK", "INACTIVITY", "HANDOVER"]).optional(),
+  type: z.enum(["RENEWAL", "TASK", "INACTIVITY", "HANDOVER", "INVOICE_OVERDUE"]).optional(),
   status: z.enum(["OPEN", "SNOOZED", "HANDLED"]).optional(),
 });
 

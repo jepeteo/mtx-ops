@@ -2,9 +2,11 @@ import {
   DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS,
   DEFAULT_INACTIVITY_THRESHOLD_DAYS,
   DEFAULT_RENEWAL_REMINDER_DAYS,
+  DEFAULT_TASK_DUE_REMINDER_DAYS,
 } from "@/lib/workspace/workspaceSettings";
 
-export const TASK_DUE_REMINDER_DAYS = [7, 3, 1, 0] as const;
+export const TASK_DUE_REMINDER_DAYS = DEFAULT_TASK_DUE_REMINDER_DAYS;
+export const INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS = DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS;
 export const INACTIVITY_THRESHOLD_DAYS = DEFAULT_INACTIVITY_THRESHOLD_DAYS;
 export const INACTIVITY_REMINDER_INTERVAL_DAYS = DEFAULT_INACTIVITY_REMINDER_INTERVAL_DAYS;
 
@@ -49,4 +51,18 @@ export function buildTaskDueDedupeKey(taskId: string, remainingDays: number, due
   const dueAtDay = toUtcDayStart(dueAt).toISOString().slice(0, 10);
   const bucket = remainingDays < 0 ? "overdue" : `due-${remainingDays}`;
   return `task:${taskId}:${bucket}:${dueAtDay}`;
+}
+
+export function buildInvoiceOverdueDedupeKey(
+  invoiceId: string,
+  overdueDays: number,
+  opts?: { intervalDays?: number },
+) {
+  const intervalDays = opts?.intervalDays ?? INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS;
+  const normalizedOverdueDays = Math.max(0, Math.trunc(overdueDays));
+  if (normalizedOverdueDays < 1) {
+    return `invoice-overdue:${invoiceId}:pending`;
+  }
+  const bucket = Math.floor((normalizedOverdueDays - 1) / intervalDays);
+  return `invoice-overdue:${invoiceId}:bucket-${bucket}`;
 }

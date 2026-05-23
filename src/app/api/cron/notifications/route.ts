@@ -4,11 +4,12 @@ import { validateCronSecret } from "@/lib/cron/validateCronSecret";
 import { fail, getRequestId, logServerError, ok } from "@/lib/http/responses";
 import {
   buildInactivityDedupeKey,
+  buildInvoiceOverdueDedupeKey,
   buildRenewalDedupeKey,
   buildTaskDueDedupeKey,
   daysUntil,
+  INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS,
   parseReminderRules,
-  TASK_DUE_REMINDER_DAYS,
 } from "@/lib/notifications/renewals";
 import {
   getWorkspaceSettingsWithDefaults,
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
     });
     const workspaceSettings = getWorkspaceSettingsWithDefaults(parseWorkspaceSettingsJson(workspace?.settings));
     const defaultRenewalReminderDays = workspaceSettings.general.defaultRenewalReminderDays;
+    const defaultTaskDueReminderDays = workspaceSettings.general.defaultTaskDueReminderDays;
     const inactivityThresholdDays = workspaceSettings.general.inactivityThresholdDays;
     const inactivityReminderIntervalDays = workspaceSettings.general.inactivityReminderIntervalDays;
 
@@ -114,7 +116,7 @@ export async function GET(req: Request) {
       if (!task.dueAt) continue;
 
       const remainingDays = daysUntil(now, task.dueAt);
-      const isReminderDay = TASK_DUE_REMINDER_DAYS.includes(remainingDays as (typeof TASK_DUE_REMINDER_DAYS)[number]);
+      const isReminderDay = defaultTaskDueReminderDays.includes(remainingDays);
       const isFirstOverdueDay = remainingDays === -1;
 
       if (!isReminderDay && !isFirstOverdueDay) continue;
@@ -298,6 +300,58 @@ export async function GET(req: Request) {
       }
     }
 
+    const overdueInvoices = await db.invoice.findMany({
+      where: {
+        status: "sent",
+        dueDate: { lt: now },
+      },
+      select: {
+        id: true,
+        workspaceId: true,
+        invoiceNumber: true,
+        dueDate: true,
+        currency: true,
+        totalMinor: true,
+        clientId: true,
+        client: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    for (const invoice of overdueInvoices) {
+      const overdueDays = -daysUntil(now, invoice.dueDate);
+      if (overdueDays < 1) continue;
+
+      const dedupeKey = buildInvoiceOverdueDedupeKey(invoice.id, overdueDays, {
+        intervalDays: INVOICE_OVERDUE_REMINDER_INTERVAL_DAYS,
+      });
+
+      newNotifications.push({
+        workspaceId: invoice.workspaceId,
+        type: "INVOICE_OVERDUE",
+        status: "OPEN",
+        entityType: "Invoice",
+        entityId: invoice.id,
+        title: `Invoice overdue by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`,
+        message: `${invoice.client.name} · ${invoice.invoiceNumber} was due on ${invoice.dueDate.toISOString().slice(0, 10)}.`,
+        dueAt: invoice.dueDate,
+        dedupeKey,
+        metadata: {
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          clientId: invoice.clientId,
+          clientName: invoice.client.name,
+          overdueDays,
+          dueDate: invoice.dueDate.toISOString(),
+          currency: invoice.currency,
+          totalMinor: invoice.totalMinor,
+        },
+      });
+    }
+
     for (const client of clients) {
       const lastActivityAt = latestByClient.get(client.id) ?? client.updatedAt;
       const inactiveDays = daysUntil(lastActivityAt, now);
@@ -337,7 +391,7 @@ export async function GET(req: Request) {
 
     return ok(requestId, {
       generated: newNotifications.length,
-      message: "Renewal, task due, and inactivity notifications processed",
+      message: "Renewal, task due, inactivity, and overdue invoice notifications processed",
     });
   } catch (error) {
     logServerError({
